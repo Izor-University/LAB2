@@ -6,25 +6,25 @@
 template <class T>
 class DynamicArray {
 private:
-    T* data;    // Указатель на выделенную память
-    int size;   // Текущий размер массива
+    T* data;
+    int size;
 
 public:
     // Создание объекта
-    DynamicArray(T* items, int count);                           // Копировать элементы из переданного массива [cite: 82]
-    explicit DynamicArray(int size);                             // Создать массив заданной длины [cite: 82]
-    DynamicArray(const DynamicArray<T>& dynamicArray);           // Копирующий конструктор [cite: 82]
+    DynamicArray(T* items, int count);
+    explicit DynamicArray(int size);
+    DynamicArray(const DynamicArray<T>& dynamicArray);
 
-    // Деструктор (обязателен для предотвращения утечек памяти)
+    // Деструктор
     ~DynamicArray();
 
     // Декомпозиция
-    T Get(int index) const;                                      // Получить элемент по индексу [cite: 85, 91]
-    int GetSize() const;                                         // Получить размер массива [cite: 88, 92]
+    const T& Get(int index) const;
+    int GetSize() const;
 
     // Операции
-    void Set(int index, T value);                                // Задать элемент по индексу [cite: 90, 94]
-    void Resize(int newSize);                                    // Изменить размер массива [cite: 93, 98]
+    void Set(int index, const T& value);
+    void Resize(int newSize);
 };
 
 // Подключение реализации шаблонных методов

@@ -18,7 +18,7 @@ private:
     int size;   // Текущий размер списка
 
 public:
-    // Создание объекта [cite: 100]
+    // Создание объекта
     LinkedList(T* items, int count);
     LinkedList();
     LinkedList(const LinkedList<T>& list);
@@ -27,16 +27,16 @@ public:
     ~LinkedList();
 
     // Декомпозиция
-    T GetFirst() const;
-    T GetLast() const;
-    T Get(int index) const;
+    const T& GetFirst() const;
+    const T& GetLast() const;
+    const T& Get(int index) const;
     LinkedList<T>* GetSubList(int startIndex, int endIndex) const;
     int GetLength() const;
 
     // Операции
-    void Append(T item);
-    void Prepend(T item);
-    void InsertAt(T item, int index);
+    void Append(const T& item);
+    void Prepend(const T& item);
+    void InsertAt(const T& item, int index);
     LinkedList<T>* Concat(LinkedList<T>* list) const;
 };
 

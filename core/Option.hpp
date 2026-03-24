@@ -47,7 +47,7 @@ public:
     bool IsNone() const { return value == nullptr; }
 
     // Безопасное извлечение значения
-    T GetValue() const {
+    const T& GetValue() const {
         if (value == nullptr) {
             throw Exception("Error: Trying to unwrap Option::None!");
         }

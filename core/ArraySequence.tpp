@@ -30,7 +30,7 @@ ArraySequence<T>::~ArraySequence() {
 
 // Декомпозиция
 template <class T>
-T ArraySequence<T>::GetFirst() const {
+const T& ArraySequence<T>::GetFirst() const {
     if (items->GetSize() == 0) {
         throw EmptyCollectionError("ArraySequence is empty!");
     }
@@ -38,7 +38,7 @@ T ArraySequence<T>::GetFirst() const {
 }
 
 template <class T>
-T ArraySequence<T>::GetLast() const {
+const T& ArraySequence<T>::GetLast() const {
     if (items->GetSize() == 0) {
         throw EmptyCollectionError("ArraySequence is empty!");
     }
@@ -46,7 +46,7 @@ T ArraySequence<T>::GetLast() const {
 }
 
 template <class T>
-T ArraySequence<T>::Get(int index) const {
+const T& ArraySequence<T>::Get(int index) const {
     return items->Get(index);
 }
 
@@ -57,7 +57,7 @@ int ArraySequence<T>::GetLength() const {
 
 // Внутренние методы модификации
 template <class T>
-Sequence<T>* ArraySequence<T>::AppendInternal(T item) {
+Sequence<T>* ArraySequence<T>::AppendInternal(const T& item) {
     int size = items->GetSize();
     items->Resize(size + 1);
     items->Set(size, item);
@@ -65,7 +65,7 @@ Sequence<T>* ArraySequence<T>::AppendInternal(T item) {
 }
 
 template <class T>
-Sequence<T>* ArraySequence<T>::PrependInternal(T item) {
+Sequence<T>* ArraySequence<T>::PrependInternal(const T& item) {
     int size = items->GetSize();
     items->Resize(size + 1);
     for (int i = size; i > 0; --i) {
@@ -76,7 +76,7 @@ Sequence<T>* ArraySequence<T>::PrependInternal(T item) {
 }
 
 template <class T>
-Sequence<T>* ArraySequence<T>::InsertAtInternal(T item, int index) {
+Sequence<T>* ArraySequence<T>::InsertAtInternal(const T& item, int index) {
     int size = items->GetSize();
     if (index < 0 || index > size) {
         throw IndexOutOfRange("Invalid index in InsertAt");
@@ -93,18 +93,8 @@ template <class T>
 Sequence<T>* ArraySequence<T>::SliceInternal(int index, int count, Sequence<T>* insertSequence) {
     int length = this->GetLength();
 
-    if (index < 0) {
-        index = length + index;
-    }
-    if (index < 0 || index > length) {
-        throw IndexOutOfRange("Slice: index out of bounds");
-    }
-    if (count < 0) {
-        count = 0;
-    }
-    if (index + count > length) {
-        count = length - index;
-    }
+    // Использование защищенного метода из базового класса Sequence
+    this->NormalizeSliceParameters(length, index, count);
 
     int insertLength = 0;
     if (insertSequence != nullptr) {
@@ -114,7 +104,6 @@ Sequence<T>* ArraySequence<T>::SliceInternal(int index, int count, Sequence<T>* 
     DynamicArray<T>* newArray = new DynamicArray<T>(0);
     newArray->Resize(length - count + insertLength);
     int position = 0;
-
     for (int i = 0; i < index; ++i) {
         newArray->Set(position, this->Get(i));
         position++;
@@ -139,17 +128,17 @@ Sequence<T>* ArraySequence<T>::SliceInternal(int index, int count, Sequence<T>* 
 
 // Основные операции интерфейса
 template <class T>
-Sequence<T>* ArraySequence<T>::Append(T item) {
+Sequence<T>* ArraySequence<T>::Append(const T& item) {
     return this->Instance()->AppendInternal(item);
 }
 
 template <class T>
-Sequence<T>* ArraySequence<T>::Prepend(T item) {
+Sequence<T>* ArraySequence<T>::Prepend(const T& item) {
     return this->Instance()->PrependInternal(item);
 }
 
 template <class T>
-Sequence<T>* ArraySequence<T>::InsertAt(T item, int index) {
+Sequence<T>* ArraySequence<T>::InsertAt(const T& item, int index) {
     return this->Instance()->InsertAtInternal(item, index);
 }
 
@@ -179,35 +168,8 @@ Sequence<T>* ArraySequence<T>::Concat(Sequence<T>* list) const {
 
 // Бонусные методы
 template <class T>
-T ArraySequence<T>::operator[](int index) const {
+const T& ArraySequence<T>::operator[](int index) const {
     return this->Get(index);
-}
-
-template <class T>
-Option<T> ArraySequence<T>::TryGetFirst() const {
-    try {
-        return Option<T>(this->GetFirst());
-    } catch (const Exception&) {
-        return Option<T>();
-    }
-}
-
-template <class T>
-Option<T> ArraySequence<T>::TryGetLast() const {
-    try {
-        return Option<T>(this->GetLast());
-    } catch (const Exception&) {
-        return Option<T>();
-    }
-}
-
-template <class T>
-Option<T> ArraySequence<T>::TryGet(int index) const {
-    try {
-        return Option<T>(this->Get(index));
-    } catch (const Exception&) {
-        return Option<T>();
-    }
 }
 
 template <class T>

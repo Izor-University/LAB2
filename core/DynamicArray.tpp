@@ -38,9 +38,9 @@ DynamicArray<T>::~DynamicArray() {
 }
 
 template <class T>
-T DynamicArray<T>::Get(int index) const {
+const T& DynamicArray<T>::Get(int index) const {
     if (index < 0 || index >= size) {
-        throw IndexOutOfRange("Error: Index out of range in Get()!"); // Может выбрасывать исключения [cite: 86, 87]
+        throw IndexOutOfRange("Error: Index out of range in Get()!");
     }
     return data[index];
 }
@@ -51,9 +51,9 @@ int DynamicArray<T>::GetSize() const {
 }
 
 template <class T>
-void DynamicArray<T>::Set(int index, T value) {
+void DynamicArray<T>::Set(int index, const T& value) {
     if (index < 0 || index >= size) {
-        throw IndexOutOfRange("Error: Index out of range in Set()!"); // Может выбрасывать исключения [cite: 95, 96]
+        throw IndexOutOfRange("Error: Index out of range in Set()!");
     }
     data[index] = value;
 }
@@ -65,12 +65,11 @@ void DynamicArray<T>::Resize(int newSize) {
     }
 
     if (newSize == size) {
-        return; // Ничего не делаем, если размер не меняется
+        return;
     }
 
     // Выделяем новую память
     T* newData = new T[newSize]();
-
     // Копируем элементы. Если размер уменьшается - лишние отбрасываются
     // Если увеличивается - копируются в начало
     int elementsToCopy = (newSize < size) ? newSize : size;

@@ -33,25 +33,25 @@ LinkedList<T>::~LinkedList() {
 }
 
 template <class T>
-T LinkedList<T>::GetFirst() const {
+const T& LinkedList<T>::GetFirst() const {
     if (size == 0) {
-        throw IndexOutOfRange("Error: List is empty in GetFirst()!"); // [cite: 100]
+        throw IndexOutOfRange("Error: List is empty in GetFirst()!");
     }
     return head->data;
 }
 
 template <class T>
-T LinkedList<T>::GetLast() const {
+const T& LinkedList<T>::GetLast() const {
     if (size == 0) {
-        throw IndexOutOfRange("Error: List is empty in GetLast()!"); // [cite: 100]
+        throw IndexOutOfRange("Error: List is empty in GetLast()!");
     }
     return tail->data;
 }
 
 template <class T>
-T LinkedList<T>::Get(int index) const {
+const T& LinkedList<T>::Get(int index) const {
     if (index < 0 || index >= size) {
-        throw IndexOutOfRange("Error: Index out of range in Get()!"); // [cite: 100]
+        throw IndexOutOfRange("Error: Index out of range in Get()!");
     }
     Node* current = head;
     for (int i = 0; i < index; ++i) {
@@ -63,7 +63,7 @@ T LinkedList<T>::Get(int index) const {
 template <class T>
 LinkedList<T>* LinkedList<T>::GetSubList(int startIndex, int endIndex) const {
     if (startIndex < 0 || endIndex >= size || startIndex > endIndex) {
-        throw IndexOutOfRange("Error: Invalid indices in GetSubList()!"); //
+        throw IndexOutOfRange("Error: Invalid indices in GetSubList()!");
     }
     LinkedList<T>* subList = new LinkedList<T>();
     Node* current = head;
@@ -78,11 +78,11 @@ LinkedList<T>* LinkedList<T>::GetSubList(int startIndex, int endIndex) const {
 
 template <class T>
 int LinkedList<T>::GetLength() const {
-    return size; //
+    return size;
 }
 
 template <class T>
-void LinkedList<T>::Append(T item) {
+void LinkedList<T>::Append(const T& item) {
     Node* newNode = new Node(item);
     if (size == 0) {
         head = tail = newNode;
@@ -94,7 +94,7 @@ void LinkedList<T>::Append(T item) {
 }
 
 template <class T>
-void LinkedList<T>::Prepend(T item) {
+void LinkedList<T>::Prepend(const T& item) {
     Node* newNode = new Node(item, head);
     head = newNode;
     if (size == 0) {
@@ -104,13 +104,9 @@ void LinkedList<T>::Prepend(T item) {
 }
 
 template <class T>
-void LinkedList<T>::InsertAt(T item, int index) {
-    // В ТЗ написано "больше/равен числу элементов".
-    // Однако логично разрешить вставку в конец (index == size), так как это эквивалентно Append.
-    // Если строго следовать тексту, то нужно использовать `>= size` и запретить вставку в конец через этот метод.
-    // Мы сделаем `> size`, чтобы коллекцией было удобно пользоваться.
+void LinkedList<T>::InsertAt(const T& item, int index) {
     if (index < 0 || index > size) {
-        throw IndexOutOfRange("Error: Index out of range in InsertAt()!"); //
+        throw IndexOutOfRange("Error: Index out of range in InsertAt()!");
     }
 
     if (index == 0) {
@@ -131,15 +127,12 @@ void LinkedList<T>::InsertAt(T item, int index) {
 template <class T>
 LinkedList<T>* LinkedList<T>::Concat(LinkedList<T>* list) const {
     LinkedList<T>* newList = new LinkedList<T>();
-
-    // Копируем элементы текущего списка
     Node* current = this->head;
     while (current != nullptr) {
         newList->Append(current->data);
         current = current->next;
     }
 
-    // Копируем элементы переданного списка
     if (list != nullptr) {
         current = list->head;
         while (current != nullptr) {
@@ -148,5 +141,5 @@ LinkedList<T>* LinkedList<T>::Concat(LinkedList<T>* list) const {
         }
     }
 
-    return newList; //
+    return newList;
 }

@@ -21,7 +21,7 @@ public:
         delete temporaryBuffer;
     }
 
-    virtual ISequenceBuilder<T>* Append(T item) override {
+    virtual ISequenceBuilder<T>* Append(const T& item) override {
         temporaryBuffer->Append(item);
         return this;
     }
@@ -50,7 +50,7 @@ public:
         delete temporaryBuffer;
     }
 
-    virtual ISequenceBuilder<T>* Append(T item) override {
+    virtual ISequenceBuilder<T>* Append(const T& item) override {
         temporaryBuffer->Append(item);
         return this;
     }

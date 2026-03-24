@@ -8,7 +8,6 @@
 template <class T>
 class ArraySequence : public Sequence<T> {
 private:
-    // Внутренняя реализация итератора для массива
     class ArrayEnumerator : public IEnumerator<T> {
     private:
         const ArraySequence<T>* seq;
@@ -24,7 +23,7 @@ private:
             return false;
         }
 
-        T GetCurrent() const override {
+        const T& GetCurrent() const override {
             if (currentIndex < 0 || currentIndex >= seq->GetLength())
                 throw IndexOutOfRange("Iterator out of bounds");
             return seq->Get(currentIndex);
@@ -38,9 +37,9 @@ protected:
     virtual ArraySequence<T>* CreateEmpty() const = 0;
     virtual ArraySequence<T>* Instance() = 0;
 
-    Sequence<T>* AppendInternal(T item);
-    Sequence<T>* PrependInternal(T item);
-    Sequence<T>* InsertAtInternal(T item, int index);
+    Sequence<T>* AppendInternal(const T& item);
+    Sequence<T>* PrependInternal(const T& item);
+    Sequence<T>* InsertAtInternal(const T& item, int index);
     Sequence<T>* SliceInternal(int index, int count, Sequence<T>* insertSeq);
 
 public:
@@ -50,25 +49,20 @@ public:
     ArraySequence(const ArraySequence<T>& seq);
     virtual ~ArraySequence();
 
-    // Реализация IEnumerable
     IEnumerator<T>* GetEnumerator() const override {
         return new ArrayEnumerator(this);
     }
 
-    // Остальные методы (GetFirst, Append, map и т.д. остаются без изменений в .hpp)
-    virtual T GetFirst() const override;
-    virtual T GetLast() const override;
-    virtual T Get(int index) const override;
+    virtual const T& GetFirst() const override;
+    virtual const T& GetLast() const override;
+    virtual const T& Get(int index) const override;
     virtual int GetLength() const override;
-    virtual Sequence<T>* Append(T item) override;
-    virtual Sequence<T>* Prepend(T item) override;
-    virtual Sequence<T>* InsertAt(T item, int index) override;
+    virtual Sequence<T>* Append(const T& item) override;
+    virtual Sequence<T>* Prepend(const T& item) override;
+    virtual Sequence<T>* InsertAt(const T& item, int index) override;
     virtual Sequence<T>* GetSubsequence(int startIndex, int endIndex) const override;
     virtual Sequence<T>* Concat(Sequence<T>* list) const override;
-    virtual T operator[](int index) const override;
-    virtual Option<T> TryGetFirst() const override;
-    virtual Option<T> TryGetLast() const override;
-    virtual Option<T> TryGet(int index) const override;
+    virtual const T& operator[](int index) const override;
     virtual Sequence<T>* map(T (*mapper)(const T& element)) const override;
     virtual Sequence<T>* where(bool (*predicate)(const T& element)) const override;
     virtual T reduce(T (*reduce_func)(const T& first_element, const T& second_element), const T& start_element) const override;

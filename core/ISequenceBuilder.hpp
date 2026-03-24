@@ -12,7 +12,7 @@ public:
 
     // Добавляет элемент и возвращает указатель на самого себя
     // (позволяет делать цепочки вызовов: builder->Append(1)->Append(2))
-    virtual ISequenceBuilder<T>* Append(T item) = 0;
+    virtual ISequenceBuilder<T>* Append(const T& item) = 0;
 
     // Создает и возвращает готовую последовательность нужного типа
     virtual Sequence<T>* Build() = 0;

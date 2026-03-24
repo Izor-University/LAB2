@@ -1,9 +1,25 @@
 template <class T>
+void Sequence<T>::NormalizeSliceParameters(int length, int& index, int& count) const {
+    if (index < 0) {
+        index = length + index;
+    }
+    if (index < 0 || index > length) {
+        throw IndexOutOfRange("Slice: index out of bounds");
+    }
+    if (count < 0) {
+        count = 0;
+    }
+    if (index + count > length) {
+        count = length - index;
+    }
+}
+
+template <class T>
 Option<T> Sequence<T>::TryGetFirst() const {
     try {
         return Option<T>(this->GetFirst());
-    } catch (const Exception&) { // Ловим наше исключение
-        return Option<T>();      // Возвращаем None
+    } catch (const Exception&) {
+        return Option<T>();
     }
 }
 
@@ -25,13 +41,11 @@ Option<T> Sequence<T>::TryGet(int index) const {
     }
 }
 
-// Твоя гениальная реализация вывода через итераторы!
 template <class T>
 std::ostream& operator<<(std::ostream& os, const Sequence<T>& seq) {
     os << "[";
-
     IEnumerator<T>* seq_iter = seq.GetEnumerator();
-    int i = 0; 
+    int i = 0;
     while (seq_iter->MoveNext()) {
         os << seq_iter->GetCurrent();
         if (i < seq.GetLength() - 1) {
@@ -40,8 +54,6 @@ std::ostream& operator<<(std::ostream& os, const Sequence<T>& seq) {
         i++;
     }
     os << "]";
-
-    delete seq_iter; // Обязательно очищаем память за итератором
-
+    delete seq_iter;
     return os;
 }

@@ -13,7 +13,7 @@ public:
     virtual bool MoveNext() = 0;
 
     // Получение текущего элемента
-    virtual T GetCurrent() const = 0;
+    virtual const T& GetCurrent() const = 0;
 
     // Сброс итератора в начало
     virtual void Reset() = 0;

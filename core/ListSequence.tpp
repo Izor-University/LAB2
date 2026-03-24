@@ -26,7 +26,7 @@ ListSequence<T>::~ListSequence() {
 
 // Декомпозиция
 template <class T>
-T ListSequence<T>::GetFirst() const {
+const T& ListSequence<T>::GetFirst() const {
     if (items->GetLength() == 0) {
         throw EmptyCollectionError("ListSequence is empty!");
     }
@@ -34,7 +34,7 @@ T ListSequence<T>::GetFirst() const {
 }
 
 template <class T>
-T ListSequence<T>::GetLast() const {
+const T& ListSequence<T>::GetLast() const {
     if (items->GetLength() == 0) {
         throw EmptyCollectionError("ListSequence is empty!");
     }
@@ -42,7 +42,7 @@ T ListSequence<T>::GetLast() const {
 }
 
 template <class T>
-T ListSequence<T>::Get(int index) const {
+const T& ListSequence<T>::Get(int index) const {
     return items->Get(index);
 }
 
@@ -53,19 +53,19 @@ int ListSequence<T>::GetLength() const {
 
 // Внутренние методы модификации
 template <class T>
-Sequence<T>* ListSequence<T>::AppendInternal(T item) {
+Sequence<T>* ListSequence<T>::AppendInternal(const T& item) {
     items->Append(item);
     return this;
 }
 
 template <class T>
-Sequence<T>* ListSequence<T>::PrependInternal(T item) {
+Sequence<T>* ListSequence<T>::PrependInternal(const T& item) {
     items->Prepend(item);
     return this;
 }
 
 template <class T>
-Sequence<T>* ListSequence<T>::InsertAtInternal(T item, int index) {
+Sequence<T>* ListSequence<T>::InsertAtInternal(const T& item, int index) {
     items->InsertAt(item, index);
     return this;
 }
@@ -74,18 +74,8 @@ template <class T>
 Sequence<T>* ListSequence<T>::SliceInternal(int index, int count, Sequence<T>* insertSequence) {
     int length = this->GetLength();
 
-    if (index < 0) {
-        index = length + index;
-    }
-    if (index < 0 || index > length) {
-        throw IndexOutOfRange("Slice: index out of bounds");
-    }
-    if (count < 0) {
-        count = 0;
-    }
-    if (index + count > length) {
-        count = length - index;
-    }
+    // Использование защищенного метода из базового класса Sequence
+    this->NormalizeSliceParameters(length, index, count);
 
     LinkedList<T>* newLinkedList = new LinkedList<T>();
     int insertLength = 0;
@@ -114,17 +104,17 @@ Sequence<T>* ListSequence<T>::SliceInternal(int index, int count, Sequence<T>* i
 
 // Основные операции интерфейса
 template <class T>
-Sequence<T>* ListSequence<T>::Append(T item) {
+Sequence<T>* ListSequence<T>::Append(const T& item) {
     return this->Instance()->AppendInternal(item);
 }
 
 template <class T>
-Sequence<T>* ListSequence<T>::Prepend(T item) {
+Sequence<T>* ListSequence<T>::Prepend(const T& item) {
     return this->Instance()->PrependInternal(item);
 }
 
 template <class T>
-Sequence<T>* ListSequence<T>::InsertAt(T item, int index) {
+Sequence<T>* ListSequence<T>::InsertAt(const T& item, int index) {
     return this->Instance()->InsertAtInternal(item, index);
 }
 
@@ -151,35 +141,8 @@ Sequence<T>* ListSequence<T>::Concat(Sequence<T>* list) const {
 
 // Бонусные методы
 template <class T>
-T ListSequence<T>::operator[](int index) const {
+const T& ListSequence<T>::operator[](int index) const {
     return this->Get(index);
-}
-
-template <class T>
-Option<T> ListSequence<T>::TryGetFirst() const {
-    try {
-        return Option<T>(this->GetFirst());
-    } catch (const Exception&) {
-        return Option<T>();
-    }
-}
-
-template <class T>
-Option<T> ListSequence<T>::TryGetLast() const {
-    try {
-        return Option<T>(this->GetLast());
-    } catch (const Exception&) {
-        return Option<T>();
-    }
-}
-
-template <class T>
-Option<T> ListSequence<T>::TryGet(int index) const {
-    try {
-        return Option<T>(this->Get(index));
-    } catch (const Exception&) {
-        return Option<T>();
-    }
 }
 
 template <class T>
