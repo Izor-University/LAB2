@@ -1,9 +1,6 @@
-#ifndef ENUMERATOR_HPP
-#define ENUMERATOR_HPP
+#ifndef IENUMERATOR_HPP
+#define IENUMERATOR_HPP
 
-#include "Option.hpp"
-
-// Интерфейс итератора
 template <class T>
 class IEnumerator {
 public:
@@ -19,14 +16,4 @@ public:
     virtual void Reset() = 0;
 };
 
-// Интерфейс перечисляемого объекта
-template <class T>
-class IEnumerable {
-public:
-    virtual ~IEnumerable() {}
-
-    // Фабричный метод для создания итератора
-    virtual IEnumerator<T>* GetEnumerator() const = 0;
-};
-
-#endif // ENUMERATOR_HPP
+#endif // IENUMERATOR_HPP

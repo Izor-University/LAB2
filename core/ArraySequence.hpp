@@ -34,7 +34,6 @@ private:
 
 protected:
     DynamicArray<T>* items;
-    virtual ArraySequence<T>* CreateEmpty() const = 0;
     virtual ArraySequence<T>* Instance() = 0;
 
     Sequence<T>* AppendInternal(const T& item);

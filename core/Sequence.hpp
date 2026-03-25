@@ -1,30 +1,37 @@
 #ifndef SEQUENCE_HPP
 #define SEQUENCE_HPP
 
-#include "exceptions.hpp" // Исправлено на exceptions.hpp
+#include "exceptions.hpp"
 #include "Option.hpp"
-#include "Enumerator.hpp"
+#include "IEnumerable.hpp"
+#include "ICollection.hpp"
 #include "ISequenceBuilder.hpp"
 #include <ostream>
 
 template <class T>
-class Sequence : public IEnumerable<T> {
+class Sequence : public IEnumerable<T>, public ICollection<T> {
 protected:
-    // Общая логика для метода Slice (вынесено для предотвращения дублирования кода)
+    // Общая логика для метода Slice
     void NormalizeSliceParameters(int length, int& index, int& count) const;
 
 public:
     virtual ~Sequence() {}
 
-    // Фабричный метод билдера
     virtual ISequenceBuilder<T>* CreateBuilder() const = 0;
+
+    // Ковариантные переопределения методов ICollection
+    virtual Sequence<T>* create_empty() const override = 0;
+    virtual Sequence<T>* clone() const override = 0;
 
     // Декомпозиция
     virtual const T& GetFirst() const = 0;
     virtual const T& GetLast() const = 0;
-    virtual const T& Get(int index) const = 0;
+
+    // Переопределение методов из ICollection
+    virtual const T& Get(int index) const override = 0;
+    virtual int GetLength() const override = 0; // Теперь это override из ICollection
+
     virtual Sequence<T>* GetSubsequence(int startIndex, int endIndex) const = 0;
-    virtual int GetLength() const = 0;
 
     // Операции
     virtual Sequence<T>* Append(const T& item) = 0;
@@ -48,7 +55,6 @@ public:
     virtual Sequence<T>* Slice(int index, int count, Sequence<T>* insertSeq = nullptr) = 0;
 };
 
-// Объявление оператора вывода
 template <class T>
 std::ostream& operator<<(std::ostream& os, const Sequence<T>& seq);
 

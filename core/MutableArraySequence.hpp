@@ -2,30 +2,39 @@
 #define MUTABLE_ARRAY_SEQUENCE_HPP
 
 #include "ArraySequence.hpp"
-#include "SequenceBuilders.hpp"
 
 template <class T>
 class MutableArraySequence : public ArraySequence<T> {
 protected:
-    virtual ArraySequence<T>* CreateEmpty() const override {
-        return new MutableArraySequence<T>();
-    }
-
-    virtual ArraySequence<T>* Instance() override {
-        return this;
-    }
+    virtual ArraySequence<T>* Instance() override { return this; }
 
 public:
-    // --- ВОЗВРАЩАЕМ СТРОИТЕЛЯ ---
-    virtual ISequenceBuilder<T>* CreateBuilder() const override {
-        return new ArraySequenceBuilder<T, MutableArraySequence<T>>();
-    }
+    class Builder : public ISequenceBuilder<T> {
+    private:
+        MutableArraySequence<T>* seq;
+    public:
+        Builder() { seq = new MutableArraySequence<T>(); }
+        virtual ~Builder() { if (seq) delete seq; }
+
+        virtual ISequenceBuilder<T>* Append(const T& item) override {
+            seq->AppendInternal(item);
+            return this;
+        }
+        virtual Sequence<T>* Build() override {
+            Sequence<T>* res = seq;
+            seq = nullptr; // Передача владения
+            return res;
+        }
+    };
+
+    virtual ISequenceBuilder<T>* CreateBuilder() const override { return new Builder(); }
+    virtual Sequence<T>* create_empty() const override { return new MutableArraySequence<T>(); }
+    virtual Sequence<T>* clone() const override { return new MutableArraySequence<T>(*this); }
 
     MutableArraySequence() : ArraySequence<T>() {}
     MutableArraySequence(T* items, int count) : ArraySequence<T>(items, count) {}
     MutableArraySequence(const LinkedList<T>& list) : ArraySequence<T>(list) {}
     MutableArraySequence(const ArraySequence<T>& seq) : ArraySequence<T>(seq) {}
-
     virtual ~MutableArraySequence() {}
 };
 

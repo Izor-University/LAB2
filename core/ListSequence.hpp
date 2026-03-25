@@ -13,7 +13,6 @@ private:
         int currentIndex;
     public:
         ListEnumerator(const ListSequence<T>* s) : seq(s), currentIndex(-1) {}
-
         bool MoveNext() override {
             if (currentIndex + 1 < seq->GetLength()) {
                 currentIndex++;
@@ -21,17 +20,12 @@ private:
             }
             return false;
         }
-
-        const T& GetCurrent() const override {
-            return seq->Get(currentIndex);
-        }
-
+        const T& GetCurrent() const override { return seq->Get(currentIndex); }
         void Reset() override { currentIndex = -1; }
     };
 
 protected:
     LinkedList<T>* items;
-    virtual ListSequence<T>* CreateEmpty() const = 0;
     virtual ListSequence<T>* Instance() = 0;
 
     Sequence<T>* AppendInternal(const T& item);
@@ -46,9 +40,7 @@ public:
     ListSequence(const ListSequence<T>& seq);
     virtual ~ListSequence();
 
-    IEnumerator<T>* GetEnumerator() const override {
-        return new ListEnumerator(this);
-    }
+    IEnumerator<T>* GetEnumerator() const override { return new ListEnumerator(this); }
 
     virtual const T& GetFirst() const override;
     virtual const T& GetLast() const override;
