@@ -15,23 +15,19 @@ BitSequence::BitSequence(const Sequence<Bit>& sequence) : MutableArraySequence<B
 
 // Побитовое И (AND)
 BitSequence* BitSequence::And(const BitSequence* other) const {
-    int maxLength = this->GetLength();
-    if (other->GetLength() > maxLength) {
-        maxLength = other->GetLength();
-    }
+    int len1 = this->GetLength();
+    int len2 = other->GetLength();
+    int maxLength = (len1 > len2) ? len1 : len2;
+
+    // Смещение для выравнивания по правому краю (добавление нулей в начало)
+    int offsetThis = maxLength - len1;
+    int offsetOther = maxLength - len2;
 
     BitSequence* resultSequence = new BitSequence();
 
     for (int i = 0; i < maxLength; ++i) {
-        Bit bit1 = Bit(false);
-        if (i < this->GetLength()) {
-            bit1 = this->Get(i);
-        }
-
-        Bit bit2 = Bit(false);
-        if (i < other->GetLength()) {
-            bit2 = other->Get(i);
-        }
+        Bit bit1 = (i >= offsetThis) ? this->Get(i - offsetThis) : Bit(false);
+        Bit bit2 = (i >= offsetOther) ? other->Get(i - offsetOther) : Bit(false);
 
         resultSequence->AppendInternal(bit1 & bit2);
     }
@@ -41,23 +37,18 @@ BitSequence* BitSequence::And(const BitSequence* other) const {
 
 // Побитовое ИЛИ (OR)
 BitSequence* BitSequence::Or(const BitSequence* other) const {
-    int maxLength = this->GetLength();
-    if (other->GetLength() > maxLength) {
-        maxLength = other->GetLength();
-    }
+    int len1 = this->GetLength();
+    int len2 = other->GetLength();
+    int maxLength = (len1 > len2) ? len1 : len2;
+
+    int offsetThis = maxLength - len1;
+    int offsetOther = maxLength - len2;
 
     BitSequence* resultSequence = new BitSequence();
 
     for (int i = 0; i < maxLength; ++i) {
-        Bit bit1 = Bit(false);
-        if (i < this->GetLength()) {
-            bit1 = this->Get(i);
-        }
-
-        Bit bit2 = Bit(false);
-        if (i < other->GetLength()) {
-            bit2 = other->Get(i);
-        }
+        Bit bit1 = (i >= offsetThis) ? this->Get(i - offsetThis) : Bit(false);
+        Bit bit2 = (i >= offsetOther) ? other->Get(i - offsetOther) : Bit(false);
 
         resultSequence->AppendInternal(bit1 | bit2);
     }
@@ -67,23 +58,18 @@ BitSequence* BitSequence::Or(const BitSequence* other) const {
 
 // Побитовое исключающее ИЛИ (XOR)
 BitSequence* BitSequence::Xor(const BitSequence* other) const {
-    int maxLength = this->GetLength();
-    if (other->GetLength() > maxLength) {
-        maxLength = other->GetLength();
-    }
+    int len1 = this->GetLength();
+    int len2 = other->GetLength();
+    int maxLength = (len1 > len2) ? len1 : len2;
+
+    int offsetThis = maxLength - len1;
+    int offsetOther = maxLength - len2;
 
     BitSequence* resultSequence = new BitSequence();
 
     for (int i = 0; i < maxLength; ++i) {
-        Bit bit1 = Bit(false);
-        if (i < this->GetLength()) {
-            bit1 = this->Get(i);
-        }
-
-        Bit bit2 = Bit(false);
-        if (i < other->GetLength()) {
-            bit2 = other->Get(i);
-        }
+        Bit bit1 = (i >= offsetThis) ? this->Get(i - offsetThis) : Bit(false);
+        Bit bit2 = (i >= offsetOther) ? other->Get(i - offsetOther) : Bit(false);
 
         resultSequence->AppendInternal(bit1 ^ bit2);
     }

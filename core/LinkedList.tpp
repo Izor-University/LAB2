@@ -1,5 +1,18 @@
-// Этот файл подключается в конце LinkedList.hpp
+// --- Вспомогательный метод очистки ---
+template <class T>
+void LinkedList<T>::Clear() {
+    Node* current = head;
+    while (current != nullptr) {
+        Node* nextNode = current->next;
+        delete current;
+        current = nextNode;
+    }
+    head = nullptr;
+    tail = nullptr;
+    size = 0;
+}
 
+// --- Конструкторы и Деструктор ---
 template <class T>
 LinkedList<T>::LinkedList() : head(nullptr), tail(nullptr), size(0) {}
 
@@ -14,8 +27,8 @@ LinkedList<T>::LinkedList(T* items, int count) : LinkedList() {
 }
 
 template <class T>
-LinkedList<T>::LinkedList(const LinkedList<T>& list) : LinkedList() {
-    Node* current = list.head;
+LinkedList<T>::LinkedList(const LinkedList<T>& other) : LinkedList() {
+    Node* current = other.head;
     while (current != nullptr) {
         Append(current->data);
         current = current->next;
@@ -23,19 +36,65 @@ LinkedList<T>::LinkedList(const LinkedList<T>& list) : LinkedList() {
 }
 
 template <class T>
-LinkedList<T>::~LinkedList() {
-    Node* current = head;
-    while (current != nullptr) {
-        Node* nextNode = current->next;
-        delete current;
-        current = nextNode;
-    }
+LinkedList<T>::LinkedList(LinkedList<T>&& other) noexcept
+    : head(other.head), tail(other.tail), size(other.size) {
+    // Забираем данные и обнуляем источник
+    other.head = nullptr;
+    other.tail = nullptr;
+    other.size = 0;
 }
 
 template <class T>
+LinkedList<T>::~LinkedList() {
+    Clear();
+}
+
+// --- Операторы присваивания ---
+template <class T>
+LinkedList<T>& LinkedList<T>::operator=(const LinkedList<T>& other) {
+    if (this != &other) {
+        // Паттерн Copy-and-Swap для защиты от исключений при выделении памяти
+        LinkedList<T> temp(other);
+
+        // Обмен указателями
+        Node* tempHead = head;
+        head = temp.head;
+        temp.head = tempHead;
+
+        Node* tempTail = tail;
+        tail = temp.tail;
+        temp.tail = tempTail;
+
+        int tempSize = size;
+        size = temp.size;
+        temp.size = tempSize;
+    }
+    return *this;
+}
+
+template <class T>
+LinkedList<T>& LinkedList<T>::operator=(LinkedList<T>&& other) noexcept {
+    if (this != &other) {
+        Clear(); // Очищаем текущие данные
+
+        // Забираем чужие
+        head = other.head;
+        tail = other.tail;
+        size = other.size;
+
+        // Обнуляем источник
+        other.head = nullptr;
+        other.tail = nullptr;
+        other.size = 0;
+    }
+    return *this;
+}
+
+// --- Декомпозиция ---
+template <class T>
 const T& LinkedList<T>::GetFirst() const {
     if (size == 0) {
-        throw IndexOutOfRange("Error: List is empty in GetFirst()!");
+        throw EmptyCollectionError("Error: List is empty in GetFirst()!");
     }
     return head->data;
 }
@@ -43,7 +102,7 @@ const T& LinkedList<T>::GetFirst() const {
 template <class T>
 const T& LinkedList<T>::GetLast() const {
     if (size == 0) {
-        throw IndexOutOfRange("Error: List is empty in GetLast()!");
+        throw EmptyCollectionError("Error: List is empty in GetLast()!");
     }
     return tail->data;
 }
@@ -53,27 +112,17 @@ const T& LinkedList<T>::Get(int index) const {
     if (index < 0 || index >= size) {
         throw IndexOutOfRange("Error: Index out of range in Get()!");
     }
-    Node* current = head;
-    for (int i = 0; i < index; ++i) {
-        current = current->next;
-    }
-    return current->data;
-}
 
-template <class T>
-LinkedList<T>* LinkedList<T>::GetSubList(int startIndex, int endIndex) const {
-    if (startIndex < 0 || endIndex >= size || startIndex > endIndex) {
-        throw IndexOutOfRange("Error: Invalid indices in GetSubList()!");
+    // Оптимизация двусвязного списка: идем с той стороны, которая ближе
+    if (index < size / 2) {
+        Node* current = head;
+        for (int i = 0; i < index; ++i) current = current->next;
+        return current->data;
+    } else {
+        Node* current = tail;
+        for (int i = size - 1; i > index; --i) current = current->prev;
+        return current->data;
     }
-    LinkedList<T>* subList = new LinkedList<T>();
-    Node* current = head;
-    for (int i = 0; i <= endIndex; ++i) {
-        if (i >= startIndex) {
-            subList->Append(current->data);
-        }
-        current = current->next;
-    }
-    return subList;
 }
 
 template <class T>
@@ -82,12 +131,35 @@ int LinkedList<T>::GetLength() const {
 }
 
 template <class T>
+LinkedList<T>* LinkedList<T>::GetSubList(int startIndex, int endIndex) const {
+    if (startIndex < 0 || endIndex >= size || startIndex > endIndex) {
+        throw IndexOutOfRange("Error: Invalid indices in GetSubList()!");
+    }
+
+    LinkedList<T>* subList = new LinkedList<T>();
+
+    Node* current = head;
+    for (int i = 0; i < startIndex; ++i) {
+        current = current->next;
+    }
+
+    for (int i = startIndex; i <= endIndex; ++i) {
+        subList->Append(current->data);
+        current = current->next;
+    }
+
+    return subList;
+}
+
+// --- Операции ---
+template <class T>
 void LinkedList<T>::Append(const T& item) {
     Node* newNode = new Node(item);
     if (size == 0) {
         head = tail = newNode;
     } else {
         tail->next = newNode;
+        newNode->prev = tail;
         tail = newNode;
     }
     size++;
@@ -95,10 +167,13 @@ void LinkedList<T>::Append(const T& item) {
 
 template <class T>
 void LinkedList<T>::Prepend(const T& item) {
-    Node* newNode = new Node(item, head);
-    head = newNode;
+    Node* newNode = new Node(item);
     if (size == 0) {
-        tail = newNode;
+        head = tail = newNode;
+    } else {
+        head->prev = newNode;
+        newNode->next = head;
+        head = newNode;
     }
     size++;
 }
@@ -114,27 +189,77 @@ void LinkedList<T>::InsertAt(const T& item, int index) {
     } else if (index == size) {
         Append(item);
     } else {
-        Node* current = head;
-        for (int i = 0; i < index - 1; ++i) {
-            current = current->next;
+        Node* current;
+        if (index < size / 2) {
+            current = head;
+            for (int i = 0; i < index; ++i) current = current->next;
+        } else {
+            current = tail;
+            for (int i = size - 1; i > index; --i) current = current->prev;
         }
-        Node* newNode = new Node(item, current->next);
-        current->next = newNode;
+
+        Node* newNode = new Node(item);
+
+        newNode->prev = current->prev;
+        newNode->next = current;
+
+        current->prev->next = newNode;
+        current->prev = newNode;
+
         size++;
     }
 }
 
 template <class T>
-LinkedList<T>* LinkedList<T>::Concat(LinkedList<T>* list) const {
-    LinkedList<T>* newList = new LinkedList<T>();
-    Node* current = this->head;
-    while (current != nullptr) {
-        newList->Append(current->data);
-        current = current->next;
+void LinkedList<T>::RemoveAt(int index) {
+    if (index < 0 || index >= size) {
+        throw IndexOutOfRange("Error: Index out of range in RemoveAt()!");
     }
 
+    if (index == 0) {
+        Node* temp = head;
+        head = head->next;
+        if (head != nullptr) {
+            head->prev = nullptr;
+        } else {
+            tail = nullptr;
+        }
+        delete temp;
+    } else if (index == size - 1) {
+        // Удаление с конца теперь O(1) благодаря двусвязности!
+        Node* temp = tail;
+        tail = tail->prev;
+        if (tail != nullptr) {
+            tail->next = nullptr;
+        } else {
+            head = nullptr;
+        }
+        delete temp;
+    } else {
+        Node* current;
+        if (index < size / 2) {
+            current = head;
+            for (int i = 0; i < index; ++i) current = current->next;
+        } else {
+            current = tail;
+            for (int i = size - 1; i > index; --i) current = current->prev;
+        }
+
+        current->prev->next = current->next;
+        current->next->prev = current->prev;
+
+        delete current;
+    }
+    size--;
+}
+
+template <class T>
+LinkedList<T>* LinkedList<T>::Concat(LinkedList<T>* list) const {
+    // Используем уже готовый копирующий конструктор
+    LinkedList<T>* newList = new LinkedList<T>(*this);
+
     if (list != nullptr) {
-        current = list->head;
+        Node* current = list->head;
         while (current != nullptr) {
             newList->Append(current->data);
             current = current->next;

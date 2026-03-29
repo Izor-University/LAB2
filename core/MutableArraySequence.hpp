@@ -22,7 +22,7 @@ public:
         }
         virtual Sequence<T>* Build() override {
             Sequence<T>* res = seq;
-            seq = nullptr; // Передача владения
+            seq = nullptr;
             return res;
         }
     };

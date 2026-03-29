@@ -17,7 +17,7 @@ public:
         virtual ~Builder() { if (seq) delete seq; }
 
         virtual ISequenceBuilder<T>* Append(const T& item) override {
-            seq->AppendInternal(item); // Легально, т.к. Builder вложен в класс
+            seq->AppendInternal(item);
             return this;
         }
         virtual Sequence<T>* Build() override {
