@@ -11,6 +11,7 @@ target_include_directories(seq_lib INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 add_library(bit_lib STATIC
         Bit.cpp
         BitSequence.cpp
+        ../app/main.cpp
 )
 
 # Связываем bit_lib и seq_lib.
