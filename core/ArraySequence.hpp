@@ -8,10 +8,12 @@
 template <class T>
 class ArraySequence : public Sequence<T> {
 private:
+    // --- Внутренний итератор ---
     class ArrayEnumerator : public IEnumerator<T> {
     private:
         const ArraySequence<T>* seq;
         int currentIndex;
+
     public:
         ArrayEnumerator(const ArraySequence<T>* s) : seq(s), currentIndex(-1) {}
 
@@ -24,38 +26,45 @@ private:
         }
 
         const T& GetCurrent() const override {
-            if (currentIndex < 0 || currentIndex >= seq->GetLength())
+            if (currentIndex < 0 || currentIndex >= seq->GetLength()) {
                 throw IndexOutOfRange("Iterator out of bounds");
+            }
             return seq->Get(currentIndex);
         }
 
-        void Reset() override { currentIndex = -1; }
+        void Reset() override {
+            currentIndex = -1;
+        }
     };
 
 protected:
     DynamicArray<T>* items;
+
+    // --- Внутренние методы ---
     virtual ArraySequence<T>* Instance() = 0;
 
     Sequence<T>* AppendInternal(const T& item);
     Sequence<T>* PrependInternal(const T& item);
     Sequence<T>* InsertAtInternal(const T& item, int index);
 
-
 public:
+    // --- Конструкторы и Деструктор ---
     ArraySequence();
     ArraySequence(T* items, int count);
     ArraySequence(const LinkedList<T>& list);
     ArraySequence(const ArraySequence<T>& seq);
     virtual ~ArraySequence();
 
+    // --- Фабрика итератора ---
     IEnumerator<T>* GetEnumerator() const override {
         return new ArrayEnumerator(this);
     }
 
-    // Оставляем только те методы, которые физически зависят от внутреннего массива
+    // --- Декомпозиция ---
     virtual const T& Get(int index) const override;
     virtual int GetLength() const override;
 
+    // --- Модификация ---
     virtual Sequence<T>* Append(const T& item) override;
     virtual Sequence<T>* Prepend(const T& item) override;
     virtual Sequence<T>* InsertAt(const T& item, int index) override;

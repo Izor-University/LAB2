@@ -6,13 +6,13 @@ class IEnumerator {
 public:
     virtual ~IEnumerator() {}
 
-    // Переход к следующему элементу. Возвращает false, если достигнут конец.
+    // --- Перемещение ---
     virtual bool MoveNext() = 0;
 
-    // Получение текущего элемента
+    // --- Декомпозиция ---
     virtual const T& GetCurrent() const = 0;
 
-    // Сброс итератора в начало
+    // --- Управление ---
     virtual void Reset() = 0;
 };
 

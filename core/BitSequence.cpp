@@ -1,11 +1,9 @@
 #include "BitSequence.hpp"
 
-// Вызов конструкторов базового класса
-BitSequence::BitSequence() : MutableArraySequence<Bit>() {
-}
+// --- Конструкторы ---
+BitSequence::BitSequence() : MutableArraySequence<Bit>() {}
 
-BitSequence::BitSequence(Bit* items, int count) : MutableArraySequence<Bit>(items, count) {
-}
+BitSequence::BitSequence(Bit* items, int count) : MutableArraySequence<Bit>(items, count) {}
 
 BitSequence::BitSequence(const Sequence<Bit>& sequence) : MutableArraySequence<Bit>() {
     for (int i = 0; i < sequence.GetLength(); ++i) {
@@ -13,13 +11,12 @@ BitSequence::BitSequence(const Sequence<Bit>& sequence) : MutableArraySequence<B
     }
 }
 
-// Побитовое И (AND)
+// --- Побитовое И (AND) ---
 BitSequence* BitSequence::And(const BitSequence* other) const {
     int len1 = this->GetLength();
     int len2 = other->GetLength();
     int maxLength = (len1 > len2) ? len1 : len2;
 
-    // Смещение для выравнивания по правому краю (добавление нулей в начало)
     int offsetThis = maxLength - len1;
     int offsetOther = maxLength - len2;
 
@@ -35,7 +32,7 @@ BitSequence* BitSequence::And(const BitSequence* other) const {
     return resultSequence;
 }
 
-// Побитовое ИЛИ (OR)
+// --- Побитовое ИЛИ (OR) ---
 BitSequence* BitSequence::Or(const BitSequence* other) const {
     int len1 = this->GetLength();
     int len2 = other->GetLength();
@@ -56,7 +53,7 @@ BitSequence* BitSequence::Or(const BitSequence* other) const {
     return resultSequence;
 }
 
-// Побитовое исключающее ИЛИ (XOR)
+// --- Побитовое исключающее ИЛИ (XOR) ---
 BitSequence* BitSequence::Xor(const BitSequence* other) const {
     int len1 = this->GetLength();
     int len2 = other->GetLength();
@@ -77,7 +74,7 @@ BitSequence* BitSequence::Xor(const BitSequence* other) const {
     return resultSequence;
 }
 
-// Побитовое НЕ (NOT)
+// --- Побитовое НЕ (NOT) ---
 BitSequence* BitSequence::Not() const {
     BitSequence* resultSequence = new BitSequence();
 

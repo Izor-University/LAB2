@@ -1,32 +1,32 @@
 #ifndef EXCEPTIONS_HPP
 #define EXCEPTIONS_HPP
 
-// Базовый класс для всех исключений нашей библиотеки
+// --- Базовый класс для всех исключений ---
 class Exception {
 protected:
     const char* message;
 
 public:
+    // Конструкторы и Деструктор
     explicit Exception(const char* msg) : message(msg) {}
     virtual ~Exception() {}
 
+    // Декомпозиция
     virtual const char* GetMessage() const {
         return message;
     }
 };
 
-// Исключение, требуемое по ТЗ для неверных индексов
+// --- Исключение для неверных индексов ---
 class IndexOutOfRange : public Exception {
 public:
-    explicit IndexOutOfRange(const char* msg = "Index out of range")
-        : Exception(msg) {}
+    explicit IndexOutOfRange(const char* msg = "Index out of range") : Exception(msg) {}
 };
 
-// Можно сразу добавить исключение для пустого списка/массива (пригодится для GetFirst/GetLast)
+// --- Исключение для пустых коллекций ---
 class EmptyCollectionError : public Exception {
 public:
-    explicit EmptyCollectionError(const char* msg = "Collection is empty")
-        : Exception(msg) {}
+    explicit EmptyCollectionError(const char* msg = "Collection is empty") : Exception(msg) {}
 };
 
 #endif // EXCEPTIONS_HPP

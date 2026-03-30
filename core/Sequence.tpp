@@ -1,31 +1,35 @@
-// --- СРЕЗ (SLICE) ---
+// --- Операции ---
 template <class T>
 Sequence<T>* Sequence<T>::Slice(int index, int count, Sequence<T>* insertSeq) {
     int len = this->GetLength();
     int start = (index < 0) ? (len + index) : index;
 
-    if (start < 0 || start > len) throw IndexOutOfRange("Slice: Out of bounds");
-    if (count < 0) count = 0;
-    if (start + count > len) count = len - start;
+    if (start < 0 || start > len) {
+        throw IndexOutOfRange("Slice: Out of bounds");
+    }
+
+    if (count < 0) {
+        count = 0;
+    }
+
+    if (start + count > len) {
+        count = len - start;
+    }
 
     ISequenceBuilder<T>* builder = this->CreateBuilder();
 
-    // Заполняем новую последовательность
     for (int i = 0; i < len; ++i) {
-        // Если дошли до места вставки — вставляем элементы из insertSeq
         if (i == start && insertSeq != nullptr) {
             for (int j = 0; j < insertSeq->GetLength(); ++j) {
                 builder->Append(insertSeq->Get(j));
             }
         }
 
-        // Копируем элементы оригинала, пропуская те, что попали в "вырезаемый" диапазон
         if (i < start || i >= start + count) {
             builder->Append(this->Get(i));
         }
     }
 
-    // Если вставка была в самый конец
     if (start == len && insertSeq != nullptr) {
         for (int j = 0; j < insertSeq->GetLength(); ++j) {
             builder->Append(insertSeq->Get(j));
@@ -37,7 +41,7 @@ Sequence<T>* Sequence<T>::Slice(int index, int count, Sequence<T>* insertSeq) {
     return result;
 }
 
-// --- FUNCTIONAL: MAP, WHERE, REDUCE ---
+// --- Функциональные методы: Map, Where, Reduce ---
 template <class T>
 Sequence<T>* Sequence<T>::Map(T (*mapper)(const T& element)) const {
     ISequenceBuilder<T>* builder = this->CreateBuilder();
@@ -71,7 +75,7 @@ T Sequence<T>::Reduce(T (*reduce_func)(const T& accumulator, const T& current), 
     return result;
 }
 
-// --- ДЕКОМПОЗИЦИЯ И ОПЕРАЦИИ ---
+// --- Декомпозиция ---
 template <class T>
 Sequence<T>* Sequence<T>::GetSubsequence(int startIndex, int endIndex) const {
     int len = this->GetLength();
@@ -97,12 +101,10 @@ Sequence<T>* Sequence<T>::Concat(Sequence<T>* list) const {
 
     ISequenceBuilder<T>* builder = this->CreateBuilder();
 
-    // Копируем свои элементы
     for (int i = 0; i < this->GetLength(); ++i) {
         builder->Append(this->Get(i));
     }
 
-    // Копируем элементы второго списка
     for (int i = 0; i < list->GetLength(); ++i) {
         builder->Append(list->Get(i));
     }
@@ -125,15 +127,14 @@ const T& Sequence<T>::GetLast() const {
     if (this->GetLength() == 0) {
         throw EmptyCollectionError("Sequence is empty");
     }
-    return this->Get(this->GetLength() - 1); // Работает за O(1) для двусвязного списка и массива
+    return this->Get(this->GetLength() - 1);
 }
 
-// --- TRY-СЕМАНТИКА ---
+// --- Try-семантика ---
 template <class T>
 Option<T> Sequence<T>::TryGet(int index) const {
-    // Быстрая проверка без throw-catch!
     if (index < 0 || index >= this->GetLength()) {
-        return Option<T>(); // Возвращает None
+        return Option<T>();
     }
     return Option<T>(this->Get(index));
 }
@@ -148,7 +149,7 @@ Option<T> Sequence<T>::TryGetLast() const {
     return this->TryGet(this->GetLength() - 1);
 }
 
-// --- ПЕРЕГРУЗКА ОПЕРАТОРА ВЫВОДА ---
+// --- Перегрузка оператора вывода ---
 template <class T>
 std::ostream& operator<<(std::ostream& os, const Sequence<T>& seq) {
     os << "[";

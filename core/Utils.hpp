@@ -4,27 +4,26 @@
 #include "Sequence.hpp"
 #include "MutableArraySequence.hpp"
 
-// Вспомогательная структура для Zip/Unzip
+// --- Вспомогательная структура пары ---
 template <typename T1, typename T2>
 struct Pair {
     T1 first;
     T2 second;
 
-    Pair() : first(), second() {
-    }
+    // Конструкторы
+    Pair() : first(), second() {}
+    Pair(T1 f, T2 s) : first(f), second(s) {}
 
-    Pair(T1 f, T2 s) : first(f), second(s) {
-    }
-
-    // Оператор сравнения для работы метода Split
+    // Операторы
     bool operator==(const Pair& other) const {
         return first == other.first && second == other.second;
     }
 };
 
+// --- Утилиты для работы с последовательностями ---
 class SequenceUtils {
 public:
-    // Функция разделения последовательности по элементу
+    // --- Разделение по элементу (Split) ---
     template <typename T>
     static Sequence<Sequence<T>*>* Split(const Sequence<T>& sequence, const T& splitElement) {
         Sequence<Sequence<T>*>* resultSequence = new MutableArraySequence<Sequence<T>*>();
@@ -51,7 +50,7 @@ public:
         }
     }
 
-    // Сцепляет две последовательности в одну последовательность пар
+    // --- Сцепление пар (Zip) ---
     template <typename T1, typename T2>
     static Sequence<Pair<T1, T2>>* Zip(const Sequence<T1>& sequence1, const Sequence<T2>& sequence2) {
         Sequence<Pair<T1, T2>>* resultSequence = new MutableArraySequence<Pair<T1, T2>>();
@@ -75,7 +74,7 @@ public:
         }
     }
 
-    // Разделяет последовательность пар на две отдельные последовательности
+    // --- Расцепление пар (Unzip) ---
     template <typename T1, typename T2>
     static Pair<Sequence<T1>*, Sequence<T2>*> Unzip(const Sequence<Pair<T1, T2>>& pairsSequence) {
         Sequence<T1>* result1 = new MutableArraySequence<T1>();

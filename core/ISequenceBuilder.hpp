@@ -1,7 +1,7 @@
 #ifndef ISEQUENCE_BUILDER_HPP
 #define ISEQUENCE_BUILDER_HPP
 
-// Предварительное объявление, чтобы избежать циклических зависимостей
+// Предварительное объявление для избежания циклических зависимостей
 template <class T>
 class Sequence;
 
@@ -10,11 +10,10 @@ class ISequenceBuilder {
 public:
     virtual ~ISequenceBuilder() {}
 
-    // Добавляет элемент и возвращает указатель на самого себя
-    // (позволяет делать цепочки вызовов: builder->Append(1)->Append(2))
+    // --- Модификация ---
     virtual ISequenceBuilder<T>* Append(const T& item) = 0;
 
-    // Создает и возвращает готовую последовательность нужного типа
+    // --- Построение ---
     virtual Sequence<T>* Build() = 0;
 };
 

@@ -8,7 +8,7 @@ class IEnumerable {
 public:
     virtual ~IEnumerable() {}
 
-    // Фабричный метод для создания итератора
+    // --- Фабричные методы ---
     virtual IEnumerator<T>* GetEnumerator() const = 0;
 };
 

@@ -1,5 +1,6 @@
 #ifndef DYNAMIC_ARRAY_HPP
 #define DYNAMIC_ARRAY_HPP
+
 #include "Exceptions.hpp"
 
 template <class T>
@@ -10,7 +11,7 @@ private:
     int capacity;
 
 public:
-    // Конструкторы
+    // --- Конструкторы ---
     DynamicArray();
     explicit DynamicArray(int size);
     DynamicArray(T* items, int count);
@@ -24,21 +25,20 @@ public:
     // Деструктор
     ~DynamicArray();
 
-    // Операторы присваивания
+    // --- Операторы присваивания ---
     DynamicArray<T>& operator=(const DynamicArray<T>& other);
     DynamicArray<T>& operator=(DynamicArray<T>&& other) noexcept;
 
-    // Декомпозиция
+    // --- Декомпозиция ---
     const T& Get(int index) const;
     int GetSize() const;
     int GetCapacity() const;
 
-    // Операции
+    // --- Операции ---
     void Set(int index, const T& value);
     void Resize(int newSize);
     void RemoveAt(int index);
 };
 
-// Подключение реализации шаблонных методов
 #include "DynamicArray.tpp"
 #endif // DYNAMIC_ARRAY_HPP

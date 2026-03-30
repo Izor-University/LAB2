@@ -1,10 +1,7 @@
 #include <iostream>
-#include <limits>
-#include <cstdlib>
 #include <ctime>
 
-// Подключаем библиотеку
-#include "../core/LinkedList.hpp" // Используем LinkedList напрямую для реестра (ради RemoveAt)
+#include "../core/LinkedList.hpp"
 #include "../core/MutableArraySequence.hpp"
 #include "../core/ImmutableArraySequence.hpp"
 #include "../core/MutableListSequence.hpp"

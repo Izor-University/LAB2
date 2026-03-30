@@ -38,7 +38,6 @@ LinkedList<T>::LinkedList(const LinkedList<T>& other) : LinkedList() {
 template <class T>
 LinkedList<T>::LinkedList(LinkedList<T>&& other) noexcept
     : head(other.head), tail(other.tail), size(other.size) {
-    // Забираем данные и обнуляем источник
     other.head = nullptr;
     other.tail = nullptr;
     other.size = 0;
@@ -53,10 +52,8 @@ LinkedList<T>::~LinkedList() {
 template <class T>
 LinkedList<T>& LinkedList<T>::operator=(const LinkedList<T>& other) {
     if (this != &other) {
-        // Паттерн Copy-and-Swap для защиты от исключений при выделении памяти
         LinkedList<T> temp(other);
 
-        // Обмен указателями
         Node* tempHead = head;
         head = temp.head;
         temp.head = tempHead;
@@ -75,14 +72,12 @@ LinkedList<T>& LinkedList<T>::operator=(const LinkedList<T>& other) {
 template <class T>
 LinkedList<T>& LinkedList<T>::operator=(LinkedList<T>&& other) noexcept {
     if (this != &other) {
-        Clear(); // Очищаем текущие данные
+        Clear();
 
-        // Забираем чужие
         head = other.head;
         tail = other.tail;
         size = other.size;
 
-        // Обнуляем источник
         other.head = nullptr;
         other.tail = nullptr;
         other.size = 0;
@@ -113,14 +108,17 @@ const T& LinkedList<T>::Get(int index) const {
         throw IndexOutOfRange("Error: Index out of range in Get()!");
     }
 
-    // Оптимизация двусвязного списка: идем с той стороны, которая ближе
     if (index < size / 2) {
         Node* current = head;
-        for (int i = 0; i < index; ++i) current = current->next;
+        for (int i = 0; i < index; ++i) {
+            current = current->next;
+        }
         return current->data;
     } else {
         Node* current = tail;
-        for (int i = size - 1; i > index; --i) current = current->prev;
+        for (int i = size - 1; i > index; --i) {
+            current = current->prev;
+        }
         return current->data;
     }
 }
@@ -192,17 +190,20 @@ void LinkedList<T>::InsertAt(const T& item, int index) {
         Node* current;
         if (index < size / 2) {
             current = head;
-            for (int i = 0; i < index; ++i) current = current->next;
+            for (int i = 0; i < index; ++i) {
+                current = current->next;
+            }
         } else {
             current = tail;
-            for (int i = size - 1; i > index; --i) current = current->prev;
+            for (int i = size - 1; i > index; --i) {
+                current = current->prev;
+            }
         }
 
         Node* newNode = new Node(item);
 
         newNode->prev = current->prev;
         newNode->next = current;
-
         current->prev->next = newNode;
         current->prev = newNode;
 
@@ -226,7 +227,6 @@ void LinkedList<T>::RemoveAt(int index) {
         }
         delete temp;
     } else if (index == size - 1) {
-        // Удаление с конца теперь O(1) благодаря двусвязности!
         Node* temp = tail;
         tail = tail->prev;
         if (tail != nullptr) {
@@ -239,10 +239,14 @@ void LinkedList<T>::RemoveAt(int index) {
         Node* current;
         if (index < size / 2) {
             current = head;
-            for (int i = 0; i < index; ++i) current = current->next;
+            for (int i = 0; i < index; ++i) {
+                current = current->next;
+            }
         } else {
             current = tail;
-            for (int i = size - 1; i > index; --i) current = current->prev;
+            for (int i = size - 1; i > index; --i) {
+                current = current->prev;
+            }
         }
 
         current->prev->next = current->next;
@@ -255,9 +259,7 @@ void LinkedList<T>::RemoveAt(int index) {
 
 template <class T>
 LinkedList<T>* LinkedList<T>::Concat(LinkedList<T>* list) const {
-    // Используем уже готовый копирующий конструктор
     LinkedList<T>* newList = new LinkedList<T>(*this);
-
     if (list != nullptr) {
         Node* current = list->head;
         while (current != nullptr) {
@@ -265,6 +267,5 @@ LinkedList<T>* LinkedList<T>::Concat(LinkedList<T>* list) const {
             current = current->next;
         }
     }
-
     return newList;
 }

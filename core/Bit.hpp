@@ -3,30 +3,31 @@
 
 #include <ostream>
 
-// Абстракция, позволяющая представить битовое значение
+// --- Абстракция битового значения ---
 class Bit {
 private:
     bool bitValue;
 
 public:
-    // Конструкторы
+    // --- Конструкторы ---
     Bit(bool initialValue = false);
     Bit(int initialValue);
 
-    // Получение значения
+    // --- Декомпозиция ---
     bool GetValue() const;
 
-    // Перегрузка побитовых операторов
+    // --- Перегрузка побитовых операторов ---
     Bit operator&(const Bit& other) const;
     Bit operator|(const Bit& other) const;
     Bit operator^(const Bit& other) const;
     Bit operator~() const;
 
-    // Перегрузка операторов сравнения
+    // --- Перегрузка операторов сравнения ---
     bool operator==(const Bit& other) const;
     bool operator!=(const Bit& other) const;
 };
 
+// --- Оператор вывода ---
 std::ostream& operator<<(std::ostream& os, const Bit& bit);
 
 #endif // BIT_HPP
