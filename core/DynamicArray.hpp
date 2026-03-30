@@ -1,5 +1,6 @@
-#pragma once
-#include "exceptions.hpp"
+#ifndef DYNAMIC_ARRAY_HPP
+#define DYNAMIC_ARRAY_HPP
+#include "Exceptions.hpp"
 
 template <class T>
 class DynamicArray {
@@ -40,3 +41,4 @@ public:
 
 // Подключение реализации шаблонных методов
 #include "DynamicArray.tpp"
+#endif // DYNAMIC_ARRAY_HPP

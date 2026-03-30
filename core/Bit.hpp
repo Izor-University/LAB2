@@ -1,6 +1,8 @@
 #ifndef BIT_HPP
 #define BIT_HPP
 
+#include <ostream>
+
 // Абстракция, позволяющая представить битовое значение
 class Bit {
 private:
@@ -24,5 +26,7 @@ public:
     bool operator==(const Bit& other) const;
     bool operator!=(const Bit& other) const;
 };
+
+std::ostream& operator<<(std::ostream& os, const Bit& bit);
 
 #endif // BIT_HPP

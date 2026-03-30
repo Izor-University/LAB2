@@ -1,6 +1,6 @@
 #pragma once
 
-#include "exceptions.hpp"
+#include "Exceptions.hpp"
 #include "Option.hpp"
 #include "IEnumerable.hpp"
 #include "ICollection.hpp"

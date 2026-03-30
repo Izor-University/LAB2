@@ -43,3 +43,8 @@ bool Bit::operator==(const Bit& other) const {
 bool Bit::operator!=(const Bit& other) const {
     return bitValue != other.bitValue;
 }
+
+std::ostream& operator<<(std::ostream& os, const Bit& bit) {
+    os << (bit.GetValue() ? 1 : 0);
+    return os;
+}

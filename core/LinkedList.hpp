@@ -1,6 +1,7 @@
-#pragma once
+#ifndef LINKED_LIST_HPP
+#define LINKED_LIST_HPP
 
-#include "exceptions.hpp"
+#include "Exceptions.hpp"
 
 template <class T>
 class LinkedList {
@@ -58,3 +59,4 @@ public:
 
 // Подключение реализации шаблонных методов
 #include "LinkedList.tpp"
+#endif // LINKED_LIST_HPP
