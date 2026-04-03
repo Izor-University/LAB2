@@ -6,39 +6,9 @@
 
 template <class T>
 class ListSequence : public Sequence<T> {
-private:
-    // --- Внутренний итератор ---
-    class ListEnumerator : public IEnumerator<T> {
-    private:
-        const ListSequence<T>* seq;
-        int currentIndex;
-
-    public:
-        ListEnumerator(const ListSequence<T>* s) : seq(s), currentIndex(-1) {}
-
-        bool MoveNext() override {
-            if (currentIndex + 1 < seq->GetLength()) {
-                currentIndex++;
-                return true;
-            }
-            return false;
-        }
-
-        const T& GetCurrent() const override {
-            if (currentIndex < 0 || currentIndex >= seq->GetLength()) {
-                throw IndexOutOfRange("Iterator out of bounds");
-            }
-            return seq->Get(currentIndex);
-        }
-
-        void Reset() override {
-            currentIndex = -1;
-        }
-    };
-
 protected:
     LinkedList<T>* items;
-
+    
     // --- Внутренние методы ---
     virtual ListSequence<T>* Instance() = 0;
 
@@ -56,7 +26,7 @@ public:
 
     // --- Фабрика итератора ---
     IEnumerator<T>* GetEnumerator() const override {
-        return new ListEnumerator(this);
+        return items->GetEnumerator();
     }
 
     // --- Декомпозиция ---

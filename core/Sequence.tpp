@@ -3,40 +3,64 @@ template <class T>
 Sequence<T>* Sequence<T>::Slice(int index, int count, Sequence<T>* insertSeq) {
     int len = this->GetLength();
     int start = (index < 0) ? (len + index) : index;
-
+    
     if (start < 0 || start > len) {
         throw IndexOutOfRange("Slice: Out of bounds");
     }
-
+    
     if (count < 0) {
         count = 0;
     }
-
+    
     if (start + count > len) {
         count = len - start;
     }
 
     ISequenceBuilder<T>* builder = this->CreateBuilder();
+    IEnumerator<T>* en = this->GetEnumerator();
 
-    for (int i = 0; i < len; ++i) {
-        if (i == start && insertSeq != nullptr) {
-            for (int j = 0; j < insertSeq->GetLength(); ++j) {
-                builder->Append(insertSeq->Get(j));
+    try {
+        int currentIndex = 0;
+        while (en->MoveNext()) {
+            if (currentIndex == start && insertSeq != nullptr) {
+                IEnumerator<T>* insertEn = insertSeq->GetEnumerator();
+                try {
+                    while (insertEn->MoveNext()) {
+                        builder->Append(insertEn->GetCurrent());
+                    }
+                } catch (...) {
+                    delete insertEn;
+                    throw;
+                }
+                delete insertEn;
             }
+
+            if (currentIndex < start || currentIndex >= start + count) {
+                builder->Append(en->GetCurrent());
+            }
+            currentIndex++;
         }
 
-        if (i < start || i >= start + count) {
-            builder->Append(this->Get(i));
+        if (start == len && insertSeq != nullptr) {
+            IEnumerator<T>* insertEn = insertSeq->GetEnumerator();
+            try {
+                while (insertEn->MoveNext()) {
+                    builder->Append(insertEn->GetCurrent());
+                }
+            } catch (...) {
+                delete insertEn;
+                throw;
+            }
+            delete insertEn;
         }
-    }
-
-    if (start == len && insertSeq != nullptr) {
-        for (int j = 0; j < insertSeq->GetLength(); ++j) {
-            builder->Append(insertSeq->Get(j));
-        }
+    } catch (...) {
+        delete en;
+        delete builder;
+        throw;
     }
 
     Sequence<T>* result = builder->Build();
+    delete en;
     delete builder;
     return result;
 }
@@ -45,10 +69,20 @@ Sequence<T>* Sequence<T>::Slice(int index, int count, Sequence<T>* insertSeq) {
 template <class T>
 Sequence<T>* Sequence<T>::Map(T (*mapper)(const T& element)) const {
     ISequenceBuilder<T>* builder = this->CreateBuilder();
-    for (int i = 0; i < this->GetLength(); ++i) {
-        builder->Append(mapper(this->Get(i)));
+    IEnumerator<T>* en = this->GetEnumerator();
+    
+    try {
+        while (en->MoveNext()) {
+            builder->Append(mapper(en->GetCurrent()));
+        }
+    } catch (...) {
+        delete en;
+        delete builder;
+        throw;
     }
+    
     Sequence<T>* result = builder->Build();
+    delete en;
     delete builder;
     return result;
 }
@@ -56,12 +90,22 @@ Sequence<T>* Sequence<T>::Map(T (*mapper)(const T& element)) const {
 template <class T>
 Sequence<T>* Sequence<T>::Where(bool (*predicate)(const T& element)) const {
     ISequenceBuilder<T>* builder = this->CreateBuilder();
-    for (int i = 0; i < this->GetLength(); ++i) {
-        if (predicate(this->Get(i))) {
-            builder->Append(this->Get(i));
+    IEnumerator<T>* en = this->GetEnumerator();
+    
+    try {
+        while (en->MoveNext()) {
+            if (predicate(en->GetCurrent())) {
+                builder->Append(en->GetCurrent());
+            }
         }
+    } catch (...) {
+        delete en;
+        delete builder;
+        throw;
     }
+    
     Sequence<T>* result = builder->Build();
+    delete en;
     delete builder;
     return result;
 }
@@ -69,9 +113,18 @@ Sequence<T>* Sequence<T>::Where(bool (*predicate)(const T& element)) const {
 template <class T>
 T Sequence<T>::Reduce(T (*reduce_func)(const T& accumulator, const T& current), const T& start_element) const {
     T result = start_element;
-    for (int i = 0; i < this->GetLength(); ++i) {
-        result = reduce_func(result, this->Get(i));
+    IEnumerator<T>* en = this->GetEnumerator();
+    
+    try {
+        while (en->MoveNext()) {
+            result = reduce_func(result, en->GetCurrent());
+        }
+    } catch (...) {
+        delete en;
+        throw;
     }
+    
+    delete en;
     return result;
 }
 
@@ -84,11 +137,27 @@ Sequence<T>* Sequence<T>::GetSubsequence(int startIndex, int endIndex) const {
     }
 
     ISequenceBuilder<T>* builder = this->CreateBuilder();
-    for (int i = startIndex; i <= endIndex; ++i) {
-        builder->Append(this->Get(i));
+    IEnumerator<T>* en = this->GetEnumerator();
+    
+    try {
+        int currentIndex = 0;
+        while (en->MoveNext()) {
+            if (currentIndex >= startIndex && currentIndex <= endIndex) {
+                builder->Append(en->GetCurrent());
+            }
+            if (currentIndex > endIndex) {
+                break;
+            }
+            currentIndex++;
+        }
+    } catch (...) {
+        delete en;
+        delete builder;
+        throw;
     }
 
     Sequence<T>* result = builder->Build();
+    delete en;
     delete builder;
     return result;
 }
@@ -100,16 +169,26 @@ Sequence<T>* Sequence<T>::Concat(Sequence<T>* list) const {
     }
 
     ISequenceBuilder<T>* builder = this->CreateBuilder();
+    IEnumerator<T>* en1 = this->GetEnumerator();
+    IEnumerator<T>* en2 = list->GetEnumerator();
 
-    for (int i = 0; i < this->GetLength(); ++i) {
-        builder->Append(this->Get(i));
-    }
-
-    for (int i = 0; i < list->GetLength(); ++i) {
-        builder->Append(list->Get(i));
+    try {
+        while (en1->MoveNext()) {
+            builder->Append(en1->GetCurrent());
+        }
+        while (en2->MoveNext()) {
+            builder->Append(en2->GetCurrent());
+        }
+    } catch (...) {
+        delete en1;
+        delete en2;
+        delete builder;
+        throw;
     }
 
     Sequence<T>* result = builder->Build();
+    delete en1;
+    delete en2;
     delete builder;
     return result;
 }
@@ -153,12 +232,18 @@ Option<T> Sequence<T>::TryGetLast() const {
 template <class T>
 std::ostream& operator<<(std::ostream& os, const Sequence<T>& seq) {
     os << "[";
-    for (int i = 0; i < seq.GetLength(); ++i) {
-        os << seq.Get(i);
-        if (i < seq.GetLength() - 1) {
+    IEnumerator<T>* en = seq.GetEnumerator();
+    bool isFirst = true;
+  
+    while (en->MoveNext()) {
+        if (!isFirst) {
             os << ", ";
         }
+        os << en->GetCurrent();
+        isFirst = false;
     }
+    delete en;
+    
     os << "]";
     return os;
 }

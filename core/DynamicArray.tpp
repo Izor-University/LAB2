@@ -151,3 +151,9 @@ void DynamicArray<T>::Resize(int newSize) {
     size = newSize;
     capacity = newCapacity;
 }
+
+// --- Фабрика итератора ---
+template <class T>
+IEnumerator<T>* DynamicArray<T>::GetEnumerator() const {
+    return new Enumerator(this);
+}

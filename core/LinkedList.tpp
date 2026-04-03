@@ -269,3 +269,9 @@ LinkedList<T>* LinkedList<T>::Concat(LinkedList<T>* list) const {
     }
     return newList;
 }
+
+// --- Фабрика итератора ---
+template <class T>
+IEnumerator<T>* LinkedList<T>::GetEnumerator() const {
+    return new Enumerator(head);
+}

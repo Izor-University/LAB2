@@ -2,6 +2,7 @@
 #define LINKED_LIST_HPP
 
 #include "Exceptions.hpp"
+#include "IEnumerator.hpp"
 
 template <class T>
 class LinkedList {
@@ -23,18 +24,50 @@ private:
     void Clear();
 
 public:
+    // --- Быстрый внутренний итератор ---
+    class Enumerator : public IEnumerator<T> {
+    private:
+        const Node* head;
+        const Node* current;
+        bool started;
+
+    public:
+        explicit Enumerator(const Node* headNode) : head(headNode), current(nullptr), started(false) {}
+
+        bool MoveNext() override {
+            if (!started) {
+                current = head;
+                started = true;
+            } else if (current != nullptr) {
+                current = current->next;
+            }
+            return current != nullptr;
+        }
+
+        const T& GetCurrent() const override {
+            if (current == nullptr) {
+                throw IndexOutOfRange("Error: Iterator out of bounds!");
+            }
+            return current->data;
+        }
+
+        void Reset() override {
+            current = nullptr;
+            started = false;
+        }
+    };
+
     // --- Конструкторы ---
     LinkedList();
     LinkedList(T* items, int count);
-
-    // Копирующий конструктор
     LinkedList(const LinkedList<T>& other);
-
-    // Move-конструктор (конструктор перемещения)
     LinkedList(LinkedList<T>&& other) noexcept;
 
-    // Деструктор
+    // --- Деструктор ---
     ~LinkedList();
+
+    // --- Фабрика итератора ---
+    IEnumerator<T>* GetEnumerator() const;
 
     // --- Операторы присваивания ---
     LinkedList<T>& operator=(const LinkedList<T>& other);

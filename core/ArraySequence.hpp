@@ -7,39 +7,9 @@
 
 template <class T>
 class ArraySequence : public Sequence<T> {
-private:
-    // --- Внутренний итератор ---
-    class ArrayEnumerator : public IEnumerator<T> {
-    private:
-        const ArraySequence<T>* seq;
-        int currentIndex;
-
-    public:
-        ArrayEnumerator(const ArraySequence<T>* s) : seq(s), currentIndex(-1) {}
-
-        bool MoveNext() override {
-            if (currentIndex + 1 < seq->GetLength()) {
-                currentIndex++;
-                return true;
-            }
-            return false;
-        }
-
-        const T& GetCurrent() const override {
-            if (currentIndex < 0 || currentIndex >= seq->GetLength()) {
-                throw IndexOutOfRange("Iterator out of bounds");
-            }
-            return seq->Get(currentIndex);
-        }
-
-        void Reset() override {
-            currentIndex = -1;
-        }
-    };
-
 protected:
     DynamicArray<T>* items;
-
+    
     // --- Внутренние методы ---
     virtual ArraySequence<T>* Instance() = 0;
 
@@ -57,7 +27,8 @@ public:
 
     // --- Фабрика итератора ---
     IEnumerator<T>* GetEnumerator() const override {
-        return new ArrayEnumerator(this);
+        // Делегируем создание итератора самому массиву!
+        return items->GetEnumerator();
     }
 
     // --- Декомпозиция ---

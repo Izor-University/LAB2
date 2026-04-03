@@ -2,6 +2,7 @@
 #define DYNAMIC_ARRAY_HPP
 
 #include "Exceptions.hpp"
+#include "IEnumerator.hpp"
 
 template <class T>
 class DynamicArray {
@@ -11,19 +12,46 @@ private:
     int capacity;
 
 public:
+    // --- Внутренний итератор ---
+    class Enumerator : public IEnumerator<T> {
+    private:
+        const DynamicArray<T>* array;
+        int currentIndex;
+
+        
+    public:
+        explicit Enumerator(const DynamicArray<T>* arr) : array(arr), currentIndex(-1) {}
+
+        bool MoveNext() override {
+            if (currentIndex + 1 < array->GetSize()) {
+                currentIndex++;
+                return true;
+            }
+            return false;
+        }
+
+        const T& GetCurrent() const override {
+            if (currentIndex < 0 || currentIndex >= array->GetSize()) {
+                throw IndexOutOfRange("Error: Iterator out of bounds!");
+            }
+            return array->Get(currentIndex);
+        }
+
+        void Reset() override {
+            currentIndex = -1;
+        }
+    };
+
     // --- Конструкторы ---
     DynamicArray();
     explicit DynamicArray(int size);
     DynamicArray(T* items, int count);
-
-    // Копирующий конструктор
     DynamicArray(const DynamicArray<T>& other);
-
-    // Move-конструктор (конструктор перемещения)
     DynamicArray(DynamicArray<T>&& other) noexcept;
-
-    // Деструктор
     ~DynamicArray();
+
+    // --- Фабрика итератора ---
+    IEnumerator<T>* GetEnumerator() const;
 
     // --- Операторы присваивания ---
     DynamicArray<T>& operator=(const DynamicArray<T>& other);
