@@ -1,6 +1,8 @@
 #include <iostream>
 #include <ctime>
+#include <limits>
 
+// --- Подключаем ядро ---
 #include "../core/LinkedList.hpp"
 #include "../core/MutableArraySequence.hpp"
 #include "../core/ImmutableArraySequence.hpp"
@@ -8,6 +10,7 @@
 #include "../core/ImmutableListSequence.hpp"
 #include "../core/BitSequence.hpp"
 #include "../core/Utils.hpp"
+#include "../core/SequenceIO.hpp"
 
 // ============================================================================
 // HELPERS (TEST FUNCTIONS & OUTPUT)
@@ -40,16 +43,31 @@ void WaitEnter() {
 int ReadInt(const char* prompt = "") {
     int value;
     while (true) {
-        std::cout << prompt;
-        if (std::cin >> value) return value;
+        // 1. Выводим подсказку, если она есть
+        if (*prompt) {
+            std::cout << prompt;
+        }
 
+        // 2. Чтение элемента (пытаемся записать в переменную)
+        std::cin >> value;
+
+        // 3. Проверяем, прочиталось ли всё без ошибок (не буквы ли это)
+        if (!std::cin.fail()) {
+            // Успех! Очищаем остаток строки (например, если пользователь ввел "123 abc")
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            return value;
+        }
+
+        // 4. Проверяем критические ошибки (нажали Ctrl+D/Ctrl+Z или поток сломался)
         if (std::cin.eof() || std::cin.bad()) {
-            std::cout << "\n[!] Critical input error. Exiting.\n";
+            std::cout << "\n[!] Обнаружен конец потока (EOF) или критическая ошибка. Завершение работы.\n";
             std::exit(1);
         }
-        std::cin.clear();
-        std::cin.ignore(10000, '\n');
-        std::cout << "  [!] Invalid input. Please enter an integer.\n";
+
+        // 5. Обработка ошибки типа (ввели текст вместо числа)
+        std::cin.clear(); // Сбрасываем флаг ошибки потока
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Вычищаем весь некорректный ввод
+        std::cout << "  [!] Ошибка. Введите целое число.\n";
     }
 }
 
@@ -81,6 +99,7 @@ void PrintRegistries() {
     if (g_BitRegistry.GetLength() == 0) std::cout << "  (Empty)\n";
     for (int i = 0; i < g_BitRegistry.GetLength(); ++i) {
         BitSeqRecord* rec = g_BitRegistry.Get(i);
+        // Вывод работает через новый SequenceIO.hpp
         std::cout << "  [" << i << "] BitSequence : " << *(rec->seq) << "\n";
     }
     std::cout << "------------------------------\n";
@@ -198,7 +217,8 @@ void CreateBitSequenceMenu() {
         } else {
             val = std::rand() % 2;
         }
-        seq->Append(Bit(val != 0));
+        // Используем новый метод AppendBit с передачей bool
+        seq->AppendBit(val != 0);
     }
 
     g_BitRegistry.Append(new BitSeqRecord{seq});
@@ -320,9 +340,9 @@ void BitSequenceOperations() {
         std::cout << "\n=== BitSequence Ops for [" << idx << "] ===\n";
         std::cout << "Current Sequence: " << *b << "\n";
         std::cout << "-------------------------------------\n";
-        std::cout << "1. Append Bit    2. Prepend Bit   3. Get Size\n";
-        std::cout << "4. Bit AND       5. Bit OR        6. Bit XOR\n";
-        std::cout << "7. Bit NOT\n";
+        std::cout << "1. Append Bit       2. Get Size       3. Assign (=)\n";
+        std::cout << "4. Bit AND (&)      5. Bit OR (|)     6. Bit XOR (^)\n";
+        std::cout << "7. Bit NOT (~)\n";
         std::cout << "0. Back to Main Menu\n";
 
         int op = ReadInt("> ");
@@ -336,25 +356,24 @@ void BitSequenceOperations() {
                         val = ReadInt("Bit (0/1): ");
                         if (val == 0 || val == 1) break;
                     }
-                    b->Append(Bit(val != 0));
+                    b->AppendBit(val != 0);
                     std::cout << "Appended IN-PLACE.\n";
                     break;
                 }
-                case 2: {
-                    int val;
-                    while (true) {
-                        val = ReadInt("Bit (0/1): ");
-                        if (val == 0 || val == 1) break;
-                    }
-                    b->Prepend(Bit(val != 0));
-                    std::cout << "Prepended IN-PLACE.\n";
+                case 2: std::cout << "Size: " << b->GetLength() << "\n"; break;
+                case 3: {
+                    int otherIdx = PickBitSeq();
+                    if (otherIdx == -1) break;
+                    // Демонстрация оператора присваивания
+                    *b = *(g_BitRegistry.Get(otherIdx)->seq);
+                    std::cout << "Sequence replaced via operator=.\n";
                     break;
                 }
-                case 3: std::cout << "Size: " << b->GetLength() << "\n"; break;
                 case 4: {
                     int otherIdx = PickBitSeq();
                     if (otherIdx == -1) break;
-                    BitSequence* res = b->And(g_BitRegistry.Get(otherIdx)->seq);
+                    // Используем перегруженный оператор &
+                    BitSequence* res = new BitSequence(*b & *(g_BitRegistry.Get(otherIdx)->seq));
                     g_BitRegistry.Append(new BitSeqRecord{res});
                     std::cout << "Result added as NEW BitSequence to registry.\n";
                     break;
@@ -362,7 +381,8 @@ void BitSequenceOperations() {
                 case 5: {
                     int otherIdx = PickBitSeq();
                     if (otherIdx == -1) break;
-                    BitSequence* res = b->Or(g_BitRegistry.Get(otherIdx)->seq);
+                    // Используем перегруженный оператор |
+                    BitSequence* res = new BitSequence(*b | *(g_BitRegistry.Get(otherIdx)->seq));
                     g_BitRegistry.Append(new BitSeqRecord{res});
                     std::cout << "Result added as NEW BitSequence to registry.\n";
                     break;
@@ -370,13 +390,16 @@ void BitSequenceOperations() {
                 case 6: {
                     int otherIdx = PickBitSeq();
                     if (otherIdx == -1) break;
-                    BitSequence* res = b->Xor(g_BitRegistry.Get(otherIdx)->seq);
+                    // Используем перегруженный оператор ^
+                    BitSequence* res = new BitSequence(*b ^ *(g_BitRegistry.Get(otherIdx)->seq));
                     g_BitRegistry.Append(new BitSeqRecord{res});
                     std::cout << "Result added as NEW BitSequence to registry.\n";
                     break;
                 }
                 case 7: {
-                    g_BitRegistry.Append(new BitSeqRecord{b->Not()});
+                    // Используем перегруженный оператор ~
+                    BitSequence* res = new BitSequence(~(*b));
+                    g_BitRegistry.Append(new BitSeqRecord{res});
                     std::cout << "Result added as NEW BitSequence to registry.\n";
                     break;
                 }
@@ -424,8 +447,8 @@ int main() {
         switch (choice) {
             case 1: CreateIntSequenceMenu(); WaitEnter(); break;
             case 2: CreateBitSequenceMenu(); WaitEnter(); break;
-            case 3: IntSequenceOperations(); break; // WaitEnter внутри цикла
-            case 4: BitSequenceOperations(); break; // WaitEnter внутри цикла
+            case 3: IntSequenceOperations(); break;
+            case 4: BitSequenceOperations(); break;
             case 5: DeleteIntSequence(); WaitEnter(); break;
             case 6: DeleteBitSequence(); WaitEnter(); break;
             case 0:

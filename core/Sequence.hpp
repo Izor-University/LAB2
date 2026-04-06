@@ -5,7 +5,7 @@
 #include "IEnumerable.hpp"
 #include "ICollection.hpp"
 #include "ISequenceBuilder.hpp"
-#include <ostream>
+
 
 template <class T>
 class Sequence : public IEnumerable<T>, public ICollection<T> {
@@ -49,8 +49,6 @@ public:
     virtual T Reduce(T (*reduce_func)(const T& accumulator, const T& current), const T& start_element) const;
 };
 
-// --- Оператор вывода ---
-template <class T>
-std::ostream& operator<<(std::ostream& os, const Sequence<T>& seq);
+
 
 #include "Sequence.tpp"

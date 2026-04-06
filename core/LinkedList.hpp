@@ -2,10 +2,10 @@
 #define LINKED_LIST_HPP
 
 #include "Exceptions.hpp"
-#include "IEnumerator.hpp"
+#include "IEnumerable.hpp"
 
 template <class T>
-class LinkedList {
+class LinkedList : public IEnumerable<T> {
 private:
     // --- Внутренняя структура узла ---
     struct Node {
@@ -67,7 +67,7 @@ public:
     ~LinkedList();
 
     // --- Фабрика итератора ---
-    IEnumerator<T>* GetEnumerator() const;
+    IEnumerator<T>* GetEnumerator() const override;
 
     // --- Операторы присваивания ---
     LinkedList<T>& operator=(const LinkedList<T>& other);

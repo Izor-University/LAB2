@@ -5,7 +5,7 @@
 #include "MutableArraySequence.hpp"
 #include "Exceptions.hpp"
 #include "Option.hpp"
-#include "IEnumerator.hpp"
+#include "SequenceIO.hpp"
 
 // ============================================================================
 // ИНСТРУМЕНТЫ ДЛЯ СТРОГОГО АНАЛИЗА ПАМЯТИ

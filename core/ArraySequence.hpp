@@ -35,12 +35,17 @@ public:
     virtual const T& Get(int index) const override;
     virtual int GetLength() const override;
 
+    // --- Оптимизированные операции (Переопределение) ---
+    virtual Sequence<T>* Concat(Sequence<T>* list) const override;
+    virtual Sequence<T>* Slice(int index, int count, Sequence<T>* insertSeq = nullptr) override;
+
     // --- Модификация ---
     virtual Sequence<T>* Append(const T& item) override;
     virtual Sequence<T>* Prepend(const T& item) override;
     virtual Sequence<T>* InsertAt(const T& item, int index) override;
 
     virtual const T& operator[](int index) const override;
+    ArraySequence<T>& operator=(const ArraySequence<T>& other);
 };
 
 #include "ArraySequence.tpp"

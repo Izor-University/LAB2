@@ -2,10 +2,10 @@
 #define DYNAMIC_ARRAY_HPP
 
 #include "Exceptions.hpp"
-#include "IEnumerator.hpp"
+#include "IEnumerable.hpp"
 
 template <class T>
-class DynamicArray {
+class DynamicArray : public IEnumerable<T> {
 private:
     T* data;
     int size;
@@ -18,7 +18,6 @@ public:
         const DynamicArray<T>* array;
         int currentIndex;
 
-        
     public:
         explicit Enumerator(const DynamicArray<T>* arr) : array(arr), currentIndex(-1) {}
 
@@ -34,7 +33,7 @@ public:
             if (currentIndex < 0 || currentIndex >= array->GetSize()) {
                 throw IndexOutOfRange("Error: Iterator out of bounds!");
             }
-            return array->Get(currentIndex);
+            return array->data[currentIndex];
         }
 
         void Reset() override {
@@ -51,7 +50,7 @@ public:
     ~DynamicArray();
 
     // --- Фабрика итератора ---
-    IEnumerator<T>* GetEnumerator() const;
+    IEnumerator<T>* GetEnumerator() const override;
 
     // --- Операторы присваивания ---
     DynamicArray<T>& operator=(const DynamicArray<T>& other);

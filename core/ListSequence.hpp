@@ -33,12 +33,16 @@ public:
     virtual const T& Get(int index) const override;
     virtual int GetLength() const override;
 
+    // --- Оптимизированные операции (Переопределение) ---
+    virtual Sequence<T>* Concat(Sequence<T>* list) const override;
+
     // --- Модификация ---
     virtual Sequence<T>* Append(const T& item) override;
     virtual Sequence<T>* Prepend(const T& item) override;
     virtual Sequence<T>* InsertAt(const T& item, int index) override;
 
     virtual const T& operator[](int index) const override;
+    ListSequence<T>& operator=(const ListSequence<T>& other);
 };
 
 #include "ListSequence.tpp"

@@ -228,22 +228,3 @@ Option<T> Sequence<T>::TryGetLast() const {
     return this->TryGet(this->GetLength() - 1);
 }
 
-// --- Перегрузка оператора вывода ---
-template <class T>
-std::ostream& operator<<(std::ostream& os, const Sequence<T>& seq) {
-    os << "[";
-    IEnumerator<T>* en = seq.GetEnumerator();
-    bool isFirst = true;
-  
-    while (en->MoveNext()) {
-        if (!isFirst) {
-            os << ", ";
-        }
-        os << en->GetCurrent();
-        isFirst = false;
-    }
-    delete en;
-    
-    os << "]";
-    return os;
-}

@@ -1,17 +1,8 @@
 #include <gtest/gtest.h>
-#include "BitSequence.hpp"
-#include "Exceptions.hpp"
-#include "IEnumerator.hpp"
+#include "../core/BitSequence.hpp"
+#include "../core/Exceptions.hpp"
+#include "../core/IEnumerator.hpp"
 
-// ============================================================================
-// ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ И ПРЕДИКАТЫ ДЛЯ ТИПА BIT
-// ============================================================================
-Bit InvertBit(const Bit& bit) { return (bit == Bit(0)) ? Bit(1) : Bit(0); }
-bool IsBitSet(const Bit& bit) { return bit == Bit(1); }
-Bit LogicalOrBits(const Bit& acc, const Bit& cur) { 
-    // Если хотя бы один из битов равен 1, возвращаем 1. Иначе 0.
-    return (acc == Bit(1) || cur == Bit(1)) ? Bit(1) : Bit(0); 
-}
 // ============================================================================
 // БАЗОВЫЕ ОПЕРАЦИИ И СОСТОЯНИЕ
 // ============================================================================
@@ -20,202 +11,194 @@ class BitSequenceTest : public ::testing::Test {};
 TEST_F(BitSequenceTest, DefaultConstructorState) {
     BitSequence seq;
     EXPECT_EQ(seq.GetLength(), 0);
-    EXPECT_THROW(seq.GetFirst(), EmptyCollectionError);
-    EXPECT_THROW(seq.GetLast(), EmptyCollectionError);
-    EXPECT_THROW(seq.Get(0), IndexOutOfRange);
+    // Проверяем, что наша кастомная система исключений работает
+    EXPECT_THROW(seq.GetBit(0), IndexOutOfRange);
 }
 
-TEST_F(BitSequenceTest, InitializationFromArray) {
-    Bit bits[] = {Bit(1), Bit(0), Bit(1), Bit(1), Bit(0)};
-    BitSequence seq(bits, 5);
-    
-    EXPECT_EQ(seq.GetLength(), 5);
-    EXPECT_EQ(seq.GetFirst(), Bit(1));
-    EXPECT_EQ(seq.GetLast(), Bit(0));
-    EXPECT_EQ(seq.Get(2), Bit(1));
-    EXPECT_EQ(seq.Get(3), Bit(1));
+TEST_F(BitSequenceTest, AppendAndGetLogic) {
+    BitSequence seq;
+    seq.AppendBit(true);  // 1
+    seq.AppendBit(false); // 0
+    seq.AppendBit(true);  // 1
+
+    EXPECT_EQ(seq.GetLength(), 3);
+    EXPECT_TRUE(seq.GetBit(0));
+    EXPECT_FALSE(seq.GetBit(1));
+    EXPECT_TRUE(seq.GetBit(2));
 }
 
 // ============================================================================
-// ПРОВЕРКА ГРАНИЦ БАЙТОВ И МАШИННЫХ СЛОВ
+// УПРАВЛЕНИЕ ПАМЯТЬЮ (ГРАНИЦЫ БАЙТОВ)
 // ============================================================================
 class BitSequenceBoundaryTest : public ::testing::Test {};
 
 TEST_F(BitSequenceBoundaryTest, ByteBoundaryCrossings) {
     BitSequence seq;
+
+    // 1. Заполняем ровно 1 байт (8 бит)
     for (int i = 0; i < 8; ++i) {
-        seq.Append(Bit(i % 2));
+        seq.AppendBit(i % 2 != 0); // 0, 1, 0, 1, 0, 1, 0, 1
     }
-    
+
     EXPECT_EQ(seq.GetLength(), 8);
-    EXPECT_EQ(seq.Get(7), Bit(1));
-    
-    seq.Append(Bit(1));
+    EXPECT_TRUE(seq.GetBit(7));
+
+    // 2. Добавление 9-го бита должно вызвать Resize() массива
+    seq.AppendBit(true);
     EXPECT_EQ(seq.GetLength(), 9);
-    EXPECT_EQ(seq.Get(8), Bit(1));
-    
+    EXPECT_TRUE(seq.GetBit(8));
+
+    // 3. Заполняем до конца 4-го байта (32 бита)
     for (int i = 9; i < 32; ++i) {
-        seq.Append(Bit(0));
+        seq.AppendBit(false);
     }
     EXPECT_EQ(seq.GetLength(), 32);
-    EXPECT_EQ(seq.Get(31), Bit(0));
-    
-    seq.Append(Bit(1));
+    EXPECT_FALSE(seq.GetBit(31));
+
+    // 4. Переход в 5-й байт (33-й бит)
+    seq.AppendBit(true);
     EXPECT_EQ(seq.GetLength(), 33);
-    EXPECT_EQ(seq.Get(32), Bit(1));
+    EXPECT_TRUE(seq.GetBit(32));
 }
 
-TEST_F(BitSequenceBoundaryTest, ShiftAcrossWordBoundaries) {
+// ============================================================================
+// ПЕРЕГРУЗКА ПОБИТОВЫХ ОПЕРАТОРОВ
+// ============================================================================
+class BitSequenceOperatorsTest : public ::testing::Test {};
+
+TEST_F(BitSequenceOperatorsTest, OperatorAnd) {
+    BitSequence s1; // 1 0 1
+    s1.AppendBit(true); s1.AppendBit(false); s1.AppendBit(true);
+
+    BitSequence s2; // 1 1 0
+    s2.AppendBit(true); s2.AppendBit(true); s2.AppendBit(false);
+
+    BitSequence res = s1 & s2; // Ожидаем 1 0 0
+
+    EXPECT_EQ(res.GetLength(), 3);
+    EXPECT_TRUE(res.GetBit(0));
+    EXPECT_FALSE(res.GetBit(1));
+    EXPECT_FALSE(res.GetBit(2));
+}
+
+TEST_F(BitSequenceOperatorsTest, OperatorOr) {
+    BitSequence s1; // 1 0 0
+    s1.AppendBit(true); s1.AppendBit(false); s1.AppendBit(false);
+
+    BitSequence s2; // 0 1 0
+    s2.AppendBit(false); s2.AppendBit(true); s2.AppendBit(false);
+
+    BitSequence res = s1 | s2; // Ожидаем 1 1 0
+
+    EXPECT_EQ(res.GetLength(), 3);
+    EXPECT_TRUE(res.GetBit(0));
+    EXPECT_TRUE(res.GetBit(1));
+    EXPECT_FALSE(res.GetBit(2));
+}
+
+TEST_F(BitSequenceOperatorsTest, OperatorXor) {
+    BitSequence s1; // 1 1 0
+    s1.AppendBit(true); s1.AppendBit(true); s1.AppendBit(false);
+
+    BitSequence s2; // 1 0 1
+    s2.AppendBit(true); s2.AppendBit(false); s2.AppendBit(true);
+
+    BitSequence res = s1 ^ s2; // Ожидаем 0 1 1
+
+    EXPECT_EQ(res.GetLength(), 3);
+    EXPECT_FALSE(res.GetBit(0));
+    EXPECT_TRUE(res.GetBit(1));
+    EXPECT_TRUE(res.GetBit(2));
+}
+
+TEST_F(BitSequenceOperatorsTest, OperatorNot) {
+    BitSequence s1; // 1 0 1
+    s1.AppendBit(true); s1.AppendBit(false); s1.AppendBit(true);
+
+    BitSequence res = ~s1; // Ожидаем 0 1 0
+
+    EXPECT_EQ(res.GetLength(), 3);
+    EXPECT_FALSE(res.GetBit(0));
+    EXPECT_TRUE(res.GetBit(1));
+    EXPECT_FALSE(res.GetBit(2));
+}
+
+// ============================================================================
+// ПРАВИЛО ТРЕХ (КОПИРОВАНИЕ И ПРИСВАИВАНИЕ)
+// ============================================================================
+class BitSequenceRuleOfThreeTest : public ::testing::Test {};
+
+TEST_F(BitSequenceRuleOfThreeTest, CopyConstructor) {
+    BitSequence s1;
+    s1.AppendBit(true);
+    s1.AppendBit(false);
+
+    BitSequence s2 = s1; // Вызов конструктора копирования
+
+    EXPECT_EQ(s2.GetLength(), 2);
+    EXPECT_TRUE(s2.GetBit(0));
+    EXPECT_FALSE(s2.GetBit(1));
+
+    // Проверка независимости памяти
+    s1.AppendBit(true);
+    EXPECT_EQ(s1.GetLength(), 3);
+    EXPECT_EQ(s2.GetLength(), 2);
+}
+
+TEST_F(BitSequenceRuleOfThreeTest, AssignmentOperator) {
+    BitSequence s1;
+    s1.AppendBit(true);
+    s1.AppendBit(false);
+
+    BitSequence s2;
+    s2.AppendBit(true); // Добавим мусор в s2
+
+    s2 = s1; // Вызов оператора присваивания
+
+    EXPECT_EQ(s2.GetLength(), 2);
+    EXPECT_TRUE(s2.GetBit(0));
+    EXPECT_FALSE(s2.GetBit(1));
+}
+
+TEST_F(BitSequenceRuleOfThreeTest, SelfAssignment) {
+    BitSequence s1;
+    s1.AppendBit(true);
+
+    s1 = s1; // Самоприсваивание не должно сломать объект
+
+    EXPECT_EQ(s1.GetLength(), 1);
+    EXPECT_TRUE(s1.GetBit(0));
+}
+
+// ============================================================================
+// ПРОВЕРКА ИТЕРАТОРА (ПОЛИМОРФИЗМ)
+// ============================================================================
+class BitSequenceEnumeratorTest : public ::testing::Test {};
+
+TEST_F(BitSequenceEnumeratorTest, IterateThroughBits) {
     BitSequence seq;
-    for (int i = 0; i < 31; ++i) seq.Append(Bit(0));
-    seq.Append(Bit(1)); 
-    
-    seq.Prepend(Bit(0));
-    
-    EXPECT_EQ(seq.GetLength(), 33);
-    EXPECT_EQ(seq.Get(0), Bit(0));
-    EXPECT_EQ(seq.Get(32), Bit(1)); 
-}
+    seq.AppendBit(false); // 0
+    seq.AppendBit(true);  // 1
+    seq.AppendBit(true);  // 1
 
-// ============================================================================
-// МУТАЦИИ И БЕЗОПАСНОСТЬ ПАМЯТИ
-// ============================================================================
-class BitSequenceMutationTest : public ::testing::Test {};
+    // Полиморфный вызов через интерфейс IEnumerable<bool>
+    IEnumerator<bool>* en = seq.GetEnumerator();
 
-TEST_F(BitSequenceMutationTest, InsertAtInternalLogic) {
-    Bit bits[] = {Bit(1), Bit(1), Bit(1)};
-    BitSequence seq(bits, 3);
-    
-    Sequence<Bit>* res = seq.InsertAt(Bit(0), 1); 
-    
-    EXPECT_EQ(res, &seq);
-    EXPECT_EQ(seq.GetLength(), 4);
-    EXPECT_EQ(seq.Get(0), Bit(1));
-    EXPECT_EQ(seq.Get(1), Bit(0));
-    EXPECT_EQ(seq.Get(2), Bit(1));
-    EXPECT_EQ(seq.Get(3), Bit(1));
-}
+    EXPECT_TRUE(en->MoveNext());
+    EXPECT_FALSE(en->GetCurrent()); // 0
 
-TEST_F(BitSequenceMutationTest, ExceptionSafetyOnOutOfBounds) {
-    BitSequence seq;
-    seq.Append(Bit(1));
-    
-    int originalLength = seq.GetLength();
-    
-    EXPECT_THROW(seq.InsertAt(Bit(1), -1), IndexOutOfRange);
-    EXPECT_THROW(seq.InsertAt(Bit(1), 2), IndexOutOfRange);
-    EXPECT_THROW(seq.Get(1), IndexOutOfRange);
-    EXPECT_THROW(seq.Get(-1), IndexOutOfRange);
-    
-    EXPECT_EQ(seq.GetLength(), originalLength);
-}
+    EXPECT_TRUE(en->MoveNext());
+    EXPECT_TRUE(en->GetCurrent());  // 1
 
-// ============================================================================
-// АЛГОРИТМЫ ЯДРА И РАБОТА С ENUMERATOR
-// ============================================================================
-class BitSequenceAlgorithmsTest : public ::testing::Test {};
+    EXPECT_TRUE(en->MoveNext());
+    EXPECT_TRUE(en->GetCurrent());  // 1
 
-TEST_F(BitSequenceAlgorithmsTest, MapInvertsBitsCorrectly) {
-    Bit bits[] = {Bit(1), Bit(0), Bit(1), Bit(1), Bit(0)};
-    BitSequence seq(bits, 5);
-    
-    Sequence<Bit>* inverted = seq.Map(InvertBit);
-    
-    EXPECT_NE(inverted, &seq);
-    EXPECT_EQ(inverted->GetLength(), 5);
-    EXPECT_EQ(inverted->Get(0), Bit(0));
-    EXPECT_EQ(inverted->Get(1), Bit(1));
-    EXPECT_EQ(inverted->Get(2), Bit(0));
-    
-    delete inverted;
-}
+    EXPECT_FALSE(en->MoveNext());   // Конец
 
-TEST_F(BitSequenceAlgorithmsTest, WhereFiltersActiveBits) {
-    Bit bits[] = {Bit(1), Bit(0), Bit(0), Bit(1), Bit(1), Bit(0)};
-    BitSequence seq(bits, 6);
-    
-    Sequence<Bit>* onlyOnes = seq.Where(IsBitSet);
-    
-    EXPECT_EQ(onlyOnes->GetLength(), 3);
-    EXPECT_EQ(onlyOnes->Get(0), Bit(1));
-    EXPECT_EQ(onlyOnes->Get(1), Bit(1));
-    EXPECT_EQ(onlyOnes->Get(2), Bit(1));
-    
-    delete onlyOnes;
-}
+    // Проверка Reset
+    en->Reset();
+    EXPECT_TRUE(en->MoveNext());
+    EXPECT_FALSE(en->GetCurrent()); // Снова 0
 
-TEST_F(BitSequenceAlgorithmsTest, ReduceCalculatesLogicalOr) {
-    Bit bits[] = {Bit(0), Bit(0), Bit(1), Bit(0)};
-    BitSequence seq(bits, 4);
-    
-    // Проверяем, есть ли хотя бы одна единица в последовательности
-    Bit result = seq.Reduce(LogicalOrBits, Bit(0)); 
-    EXPECT_EQ(result, Bit(1));
-
-    // Проверяем полностью нулевую последовательность
-    Bit zeroBits[] = {Bit(0), Bit(0), Bit(0)};
-    BitSequence zeroSeq(zeroBits, 3);
-    
-    Bit zeroResult = zeroSeq.Reduce(LogicalOrBits, Bit(0));
-    EXPECT_EQ(zeroResult, Bit(0));
-}
-
-TEST_F(BitSequenceAlgorithmsTest, ConcatUnalignedSequences) {
-    Bit bits1[] = {Bit(1), Bit(0), Bit(1)}; 
-    BitSequence seq1(bits1, 3);
-    
-    Bit bits2[] = {Bit(0), Bit(1), Bit(1), Bit(0), Bit(1)}; 
-    BitSequence seq2(bits2, 5);
-    
-    Sequence<Bit>* result = seq1.Concat(&seq2);
-    
-    EXPECT_EQ(result->GetLength(), 8);
-    EXPECT_EQ(result->Get(2), Bit(1)); 
-    EXPECT_EQ(result->Get(3), Bit(0)); 
-    EXPECT_EQ(result->Get(7), Bit(1)); 
-    
-    delete result;
-}
-
-TEST_F(BitSequenceAlgorithmsTest, SubsequenceExtractionAcrossBoundaries) {
-    BitSequence seq;
-    for (int i = 0; i < 16; ++i) {
-        seq.Append(Bit(i % 2));
-    }
-    
-    Sequence<Bit>* sub = seq.GetSubsequence(3, 10);
-    
-    EXPECT_EQ(sub->GetLength(), 8);
-    EXPECT_EQ(sub->Get(0), Bit(1)); 
-    EXPECT_EQ(sub->Get(7), Bit(0)); 
-    
-    delete sub;
-}
-
-// ============================================================================
-// НАГРУЗОЧНЫЕ И СТРЕСС-ТЕСТЫ
-// ============================================================================
-class BitSequenceStressTest : public ::testing::Test {};
-
-TEST_F(BitSequenceStressTest, EnumeratorOverMassiveSequence) {
-    BitSequence seq;
-    const int ITERATIONS = 500000;
-    for (int i = 0; i < ITERATIONS; ++i) {
-        seq.Append(Bit(1)); 
-    }
-    
-    IEnumerator<Bit>* en = seq.GetEnumerator();
-    int count = 0; // Для подсчета используем int
-    
-    ASSERT_NO_THROW({
-        while (en->MoveNext()) {
-            if (en->GetCurrent() == Bit(1)) {
-                count++;
-            }
-        }
-    });
-    
-    EXPECT_EQ(count, ITERATIONS); 
-    
-    delete en;
+    delete en; // Не забываем чистить память!
 }
