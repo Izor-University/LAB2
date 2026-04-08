@@ -35,28 +35,6 @@ int ListSequence<T>::GetLength() const {
     return items->GetLength();
 }
 
-// --- Оптимизированные операторы ---
-template <class T>
-Sequence<T>* ListSequence<T>::Concat(Sequence<T>* list) const {
-    ListSequence<T>* result = static_cast<ListSequence<T>*>(this->clone());
-
-    if (list != nullptr) {
-        IEnumerator<T>* en = list->GetEnumerator();
-        try {
-            while (en->MoveNext()) {
-
-                result->AppendInternal(en->GetCurrent());
-            }
-        } catch (...) {
-            delete en;
-            delete result;
-            throw;
-        }
-        delete en;
-    }
-    return result;
-}
-
 // --- Внутренние методы модификации ---
 template <class T>
 Sequence<T>* ListSequence<T>::AppendInternal(const T& item) {
@@ -74,6 +52,128 @@ template <class T>
 Sequence<T>* ListSequence<T>::InsertAtInternal(const T& item, int index) {
     items->InsertAt(item, index);
     return this;
+}
+
+// --- Операции ---
+template <class T>
+Sequence<T>* ListSequence<T>::GetSubsequence(int startIndex, int endIndex) const {
+    int len = this->GetLength();
+    if (startIndex < 0 || startIndex >= len || endIndex < 0 || endIndex >= len || startIndex > endIndex) {
+        throw IndexOutOfRange("GetSubsequence: Invalid indices");
+    }
+
+    ISequenceBuilder<T>* builder = this->CreateBuilder();
+    IEnumerator<T>* en = this->GetEnumerator();
+    try {
+        int currentIndex = 0;
+        while (en->MoveNext()) {
+            if (currentIndex >= startIndex && currentIndex <= endIndex) {
+                builder->Append(en->GetCurrent());
+            }
+            if (currentIndex > endIndex) {
+                break;
+            }
+            currentIndex++;
+        }
+    } catch (...) {
+        delete en;
+        delete builder;
+        throw;
+    }
+
+    Sequence<T>* result = builder->Build();
+    delete en;
+    delete builder;
+    return result;
+}
+
+template <class T>
+Sequence<T>* ListSequence<T>::Concat(Sequence<T>* list) const {
+    if (list == nullptr) {
+        return this->Clone();
+    }
+
+    ISequenceBuilder<T>* builder = this->CreateBuilder();
+    IEnumerator<T>* en1 = this->GetEnumerator();
+    IEnumerator<T>* en2 = list->GetEnumerator();
+    try {
+        while (en1->MoveNext()) {
+            builder->Append(en1->GetCurrent());
+        }
+        while (en2->MoveNext()) {
+            builder->Append(en2->GetCurrent());
+        }
+    } catch (...) {
+        delete en1;
+        delete en2;
+        delete builder;
+        throw;
+    }
+
+    Sequence<T>* result = builder->Build();
+    delete en1;
+    delete en2;
+    delete builder;
+    return result;
+}
+
+template <class T>
+Sequence<T>* ListSequence<T>::Slice(int index, int count, Sequence<T>* insertSeq) {
+    int len = this->GetLength();
+    int start = (index < 0) ? (len + index) : index;
+    if (start < 0 || start > len) throw IndexOutOfRange("Slice: Out of bounds");
+    if (count < 0) count = 0;
+    if (start + count > len) count = len - start;
+
+    ISequenceBuilder<T>* builder = this->CreateBuilder();
+    IEnumerator<T>* en = this->GetEnumerator();
+    try {
+        int currentIndex = 0;
+        while (en->MoveNext()) {
+            // Вставка
+            if (currentIndex == start && insertSeq != nullptr) {
+                IEnumerator<T>* insertEn = insertSeq->GetEnumerator();
+                try {
+                    while (insertEn->MoveNext()) {
+                        builder->Append(insertEn->GetCurrent());
+                    }
+                } catch (...) {
+                    delete insertEn;
+                    throw;
+                }
+                delete insertEn;
+            }
+
+            // Копирование (если мы не в зоне вырезания)
+            if (currentIndex < start || currentIndex >= start + count) {
+                builder->Append(en->GetCurrent());
+            }
+            currentIndex++;
+        }
+
+        // Вставка в самый конец (если вырезание было до конца)
+        if (start == len && insertSeq != nullptr) {
+            IEnumerator<T>* insertEn = insertSeq->GetEnumerator();
+            try {
+                while (insertEn->MoveNext()) {
+                    builder->Append(insertEn->GetCurrent());
+                }
+            } catch (...) {
+                delete insertEn;
+                throw;
+            }
+            delete insertEn;
+        }
+    } catch (...) {
+        delete en;
+        delete builder;
+        throw;
+    }
+
+    Sequence<T>* result = builder->Build();
+    delete en;
+    delete builder;
+    return result;
 }
 
 // --- Основные операции интерфейса ---

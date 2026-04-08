@@ -11,8 +11,8 @@ public:
     virtual int GetLength() const = 0;
 
     // --- Виртуальные конструкторы ---
-    virtual ICollection<T>* create_empty() const = 0;
-    virtual ICollection<T>* clone() const = 0;
+    virtual ICollection<T>* CreateEmpty() const = 0;
+    virtual ICollection<T>* Clone() const = 0;
 };
 
 #endif // ICOLLECTION_HPP

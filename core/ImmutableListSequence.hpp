@@ -45,11 +45,11 @@ public:
         return new Builder();
     }
 
-    virtual Sequence<T>* create_empty() const override {
+    virtual Sequence<T>* CreateEmpty() const override {
         return new ImmutableListSequence<T>();
     }
 
-    virtual Sequence<T>* clone() const override {
+    virtual Sequence<T>* Clone() const override {
         return new ImmutableListSequence<T>(*this);
     }
 

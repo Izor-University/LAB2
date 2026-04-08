@@ -39,25 +39,47 @@ int ArraySequence<T>::GetLength() const {
     return items->GetSize();
 }
 
-// --- Оптимизированные операции ---
+// --- Операции ---
+template <class T>
+Sequence<T>* ArraySequence<T>::GetSubsequence(int startIndex, int endIndex) const {
+    int len = this->GetLength();
+    if (startIndex < 0 || startIndex >= len || endIndex < 0 || endIndex >= len || startIndex > endIndex) {
+        throw IndexOutOfRange("GetSubsequence: Invalid indices");
+    }
+
+    int count = endIndex - startIndex + 1;
+
+    // Создаем пустую оболочку и сразу выделяем память
+    ArraySequence<T>* result = static_cast<ArraySequence<T>*>(this->CreateEmpty());
+    result->items->Resize(count);
+
+    // Прямое копирование
+    for (int i = 0; i < count; ++i) {
+        result->items->Set(i, this->items->Get(startIndex + i));
+    }
+
+    return result;
+}
+
 template <class T>
 Sequence<T>* ArraySequence<T>::Concat(Sequence<T>* list) const {
-    // 1. Клонируем текущую последовательность (сразу копируется весь наш массив)
-    ArraySequence<T>* result = static_cast<ArraySequence<T>*>(this->clone());
+    ArraySequence<T>* result = static_cast<ArraySequence<T>*>(this->CreateEmpty());
 
+    int otherLen = (list != nullptr) ? list->GetLength() : 0;
+    result->items->Resize(this->GetLength() + otherLen);
+
+    int destIndex = 0;
+    // Копируем себя
+    for (int i = 0; i < this->GetLength(); ++i) {
+        result->items->Set(destIndex++, this->items->Get(i));
+    }
+
+    // Копируем other полиморфно
     if (list != nullptr) {
-        int oldSize = result->GetLength();
-        int addedSize = list->GetLength();
-
-        // ОПТИМИЗАЦИЯ: Расширяем массив всего ОДИН РАЗ под итоговый размер!
-        result->items->Resize(oldSize + addedSize);
-
         IEnumerator<T>* en = list->GetEnumerator();
-        int i = oldSize;
         try {
             while (en->MoveNext()) {
-                // Прямая вставка по индексу (без вызовов Append и Resize)
-                result->items->Set(i++, en->GetCurrent());
+                result->items->Set(destIndex++, en->GetCurrent());
             }
         } catch (...) {
             delete en;
@@ -66,6 +88,7 @@ Sequence<T>* ArraySequence<T>::Concat(Sequence<T>* list) const {
         }
         delete en;
     }
+
     return result;
 }
 
@@ -77,29 +100,25 @@ Sequence<T>* ArraySequence<T>::Slice(int index, int count, Sequence<T>* insertSe
     if (count < 0) count = 0;
     if (start + count > len) count = len - start;
 
+    ArraySequence<T>* result = static_cast<ArraySequence<T>*>(this->CreateEmpty());
     int insertLen = (insertSeq != nullptr) ? insertSeq->GetLength() : 0;
 
-    // Вычисляем точный размер будущего массива
-    int newSize = len - count + insertLen;
+    // ОДИН раз выделяем финальный размер
+    result->items->Resize(len - count + insertLen);
 
-    // Создаем пустую последовательность нужного типа (Mutable/Immutable)
-    ArraySequence<T>* result = static_cast<ArraySequence<T>*>(this->create_empty());
+    int destIndex = 0;
 
-    // ОПТИМИЗАЦИЯ: Выделяем память один раз!
-    result->items->Resize(newSize);
-
-    int destIdx = 0;
-    // 1. Копируем первую часть (до start)
+    // 1. До вырезанного куска
     for (int i = 0; i < start; ++i) {
-        result->items->Set(destIdx++, this->Get(i));
+        result->items->Set(destIndex++, this->items->Get(i));
     }
 
-    // 2. Вставляем элементы из insertSeq
+    // 2. Вставка
     if (insertSeq != nullptr) {
         IEnumerator<T>* en = insertSeq->GetEnumerator();
         try {
             while (en->MoveNext()) {
-                result->items->Set(destIdx++, en->GetCurrent());
+                result->items->Set(destIndex++, en->GetCurrent());
             }
         } catch (...) {
             delete en;
@@ -109,13 +128,14 @@ Sequence<T>* ArraySequence<T>::Slice(int index, int count, Sequence<T>* insertSe
         delete en;
     }
 
-    // 3. Копируем остаток хвоста
+    // 3. После вырезанного куска
     for (int i = start + count; i < len; ++i) {
-        result->items->Set(destIdx++, this->Get(i));
+        result->items->Set(destIndex++, this->items->Get(i));
     }
 
     return result;
 }
+
 // --- Внутренние методы модификации ---
 template <class T>
 Sequence<T>* ArraySequence<T>::AppendInternal(const T& item) {

@@ -35,7 +35,8 @@ public:
     virtual const T& Get(int index) const override;
     virtual int GetLength() const override;
 
-    // --- Оптимизированные операции (Переопределение) ---
+    // --- Операции ---
+    virtual Sequence<T>* GetSubsequence(int startIndex, int endIndex) const override;
     virtual Sequence<T>* Concat(Sequence<T>* list) const override;
     virtual Sequence<T>* Slice(int index, int count, Sequence<T>* insertSeq = nullptr) override;
 

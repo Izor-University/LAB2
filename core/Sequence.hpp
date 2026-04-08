@@ -16,8 +16,8 @@ public:
     virtual ISequenceBuilder<T>* CreateBuilder() const = 0;
 
     // --- Виртуальные конструкторы (ICollection) ---
-    virtual Sequence<T>* create_empty() const override = 0;
-    virtual Sequence<T>* clone() const override = 0;
+    virtual Sequence<T>* CreateEmpty() const override = 0;
+    virtual Sequence<T>* Clone() const override = 0;
 
     // --- Чисто виртуальные методы декомпозиции ---
     virtual const T& Get(int index) const override = 0;
@@ -32,11 +32,11 @@ public:
     // --- Декомпозиция ---
     virtual const T& GetFirst() const;
     virtual const T& GetLast() const;
-    virtual Sequence<T>* GetSubsequence(int startIndex, int endIndex) const;
+    virtual Sequence<T>* GetSubsequence(int startIndex, int endIndex) const = 0;
 
     // --- Операции ---
-    virtual Sequence<T>* Concat(Sequence<T>* list) const;
-    virtual Sequence<T>* Slice(int index, int count, Sequence<T>* insertSeq = nullptr);
+    virtual Sequence<T>* Concat(Sequence<T>* list) const = 0;
+    virtual Sequence<T>* Slice(int index, int count, Sequence<T>* insertSeq = nullptr) = 0;
 
     // --- Try-семантика ---
     virtual Option<T> TryGetFirst() const;
